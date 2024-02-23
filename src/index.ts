@@ -1,14 +1,17 @@
-import http from "http";
+import 'dotenv/config';
+import express from 'express';
+import { logger } from './config/logger';
 
-export const server = http.createServer((req, res) => {
-  res.writeHead(200, { "Content-Type": "application/json" });
-  res.end(
-    JSON.stringify({
-      data: "Hello World!",
-    }),
-  );
+const app = express();
+
+app.get('/', (req, res) => {
+  res.send({
+    data: 'Hello World!',
+  });
 });
 
-server.listen(8000, () => {
-  console.log(`Server run on http://localhost:8000`);
+const server = app.listen(process.env.SERVER_PORT, () => {
+  logger.info(`Server run on http://localhost:${process.env.SERVER_PORT}`);
 });
+
+export { server };
