@@ -1,10 +1,17 @@
 import { IncomingMessage } from 'http';
 import { Duplex } from 'stream';
-import { RawData } from 'ws';
+import { RawData, WebSocket } from 'ws';
 import { logger } from '../config/logger';
 import { WssProtocol } from '../types/server';
 import { abortHandshake } from '../utils/wsUtil';
 import WebSocketService from './websocketService';
+import {
+  OCPPActions,
+  OCPPErrorType,
+  OCPPIncomingRequest,
+  OCPPMessageType,
+} from '../types/ocpp/ocppCommon';
+import { OCPPError, getClientId } from '../utils/ocppUtil';
 
 export default class OcppService extends WebSocketService {
   constructor() {
@@ -24,19 +31,69 @@ export default class OcppService extends WebSocketService {
       return;
     }
 
-    this.wss.handleUpgrade(request, socket, head, (ws, req) => {
-      this.wss.emit('connection', ws, req);
+    this.getWss.handleUpgrade(request, socket, head, (ws, req) => {
+      this.getWss.emit('connection', ws, req);
     });
   }
 
   protected onOpen(): void {}
 
-  protected async onMessage(data: RawData) {
-    //TODO: handle ocpp1.6 core request types and response types
-    logger.info(data.toString(), { service: this.className });
+  protected async onMessage(
+    ws: WebSocket,
+    request: IncomingMessage,
+    data: RawData,
+  ) {
+    try {
+      const message: OCPPIncomingRequest = JSON.parse(data.toString());
+      if (message[0] === OCPPMessageType.CALL) {
+        const action = message[2];
+        //TODO: handle response
+        switch (action) {
+          case OCPPActions.AUTHORIZE:
+            break;
+          case OCPPActions.BOOT_NOTIFICATION:
+            logger.info(data.toString(), { service: this.className });
+            break;
+          case OCPPActions.DATA_TRANSFER:
+            break;
+          case OCPPActions.DIAGNOSTICS_STATUS_NOTIF:
+            break;
+          case OCPPActions.FIRMWARE_STATUS_NOTIF:
+            break;
+          case OCPPActions.HEARTBEAT:
+            break;
+          case OCPPActions.METER_VALUES:
+            break;
+          case OCPPActions.START_TRANSACTION:
+            break;
+          case OCPPActions.STATUS_NOTIFICATION:
+            break;
+          case OCPPActions.STOP_TRANSACTION:
+            break;
+          default:
+            throw new OCPPError(
+              OCPPErrorType.NOT_IMPLEMENTED,
+              `Requested action: ${action} is unknown`,
+            );
+        }
+      }
+    } catch (error) {
+      if (typeof error === 'string') {
+        logger.error(error, { service: this.className });
+      } else if (error instanceof OCPPError) {
+        logger.error(`${error.name}: ${error.message}`, {
+          service: this.className,
+        });
+        if (ws.readyState !== WebSocket.CLOSED) {
+          //TODO: send error response
+        }
+      } else if (error instanceof Error) {
+        logger.error(error.message, { service: this.className });
+      }
+    }
   }
 
-  protected onError(err: Error): void {
+  protected onError(request: IncomingMessage, err: Error): void {
     logger.error(err.message, { service: this.className });
   }
 
@@ -48,9 +105,18 @@ export default class OcppService extends WebSocketService {
     logger.info('pong', { service: this.className });
   }
 
-  protected onClose(code: number, reason: Buffer): void {
-    logger.info(`Connection disconnected ${code} ${reason}`, {
-      service: this.className,
-    });
+  protected onClose(
+    request: IncomingMessage,
+    code: number,
+    reason: Buffer,
+  ): void {
+    logger.info(
+      `Connection with ${getClientId(request.url)} disconnected ${code} ${reason}`,
+      {
+        service: this.className,
+      },
+    );
   }
+
+  //TODO: Create response handler function
 }
