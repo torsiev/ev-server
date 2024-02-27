@@ -17,7 +17,8 @@
   "parser": "@typescript-eslint/parser",
   "rules": {
     "semi": "off",
-    "@stylistic/semi": ["error", "always"]
+    "@stylistic/semi": ["error", "always"],
+    "no-console": "error"
   },
   "ignorePatterns": ["dist/**/*.js"]
 }
