@@ -2,18 +2,18 @@ import { IncomingMessage } from 'http';
 import { Duplex } from 'stream';
 import { RawData, WebSocket } from 'ws';
 import { logger } from '../config/logger';
-import { WssProtocol } from '../types/server';
-import { abortHandshake } from '../utils/wsUtil';
-import WebSocketService from './websocketService';
 import {
   OCPPActions,
   OCPPErrorType,
   OCPPIncomingRequest,
   OCPPMessageType,
 } from '../types/ocpp/ocppCommon';
+import { WssProtocol } from '../types/server';
 import { OCPPError, getClientId } from '../utils/ocppUtil';
+import { abortHandshake } from '../utils/wsUtil';
+import WebSocketController from './webSocketController';
 
-export default class OcppService extends WebSocketService {
+export default class OcppController extends WebSocketController {
   constructor() {
     super({
       noServer: true,

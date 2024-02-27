@@ -2,7 +2,7 @@ import { IncomingMessage } from 'http';
 import internal from 'stream';
 import { RawData, ServerOptions, WebSocketServer, WebSocket } from 'ws';
 
-export default abstract class WebSocketService {
+export default abstract class WebSocketController {
   private wss: WebSocketServer;
   readonly className = this.constructor.name;
 
