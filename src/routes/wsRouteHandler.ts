@@ -1,6 +1,6 @@
 import { IncomingMessage } from 'http';
 import internal from 'stream';
-import { logger } from '../config/logger';
+import { logger } from '../app/logger';
 import OcppController from '../controllers/ocppController';
 import { WssRoute } from '../types/server';
 import { abortHandshake } from '../utils/wsUtil';

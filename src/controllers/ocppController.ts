@@ -1,7 +1,7 @@
 import { IncomingMessage } from 'http';
 import { Duplex } from 'stream';
 import { RawData, WebSocket } from 'ws';
-import { logger } from '../config/logger';
+import { logger } from '../app/logger';
 import {
   OCPPActions,
   OCPPErrorType,
