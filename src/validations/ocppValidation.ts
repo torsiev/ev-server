@@ -1,12 +1,10 @@
 import z from 'zod';
 
-/**
- * --------------------------------------
- * Defines OCPP request payload validation schema
- * --------------------------------------
- */
+// --------------------------------------
+// Defines OCPP request payload validation schema
+// --------------------------------------
 const sampledValueSchema = z.object({
-  value: z.string(),
+  value: z.string().min(1),
   context: z
     .enum([
       'Interruption.Begin',
@@ -20,7 +18,7 @@ const sampledValueSchema = z.object({
     ])
     .optional(),
   format: z.enum(['Raw', 'SignedData']).optional(),
-  measured: z
+  measurand: z
     .enum([
       'Energy.Active.Export.Register',
       'Energy.Active.Import.Register',
@@ -85,25 +83,25 @@ const sampledValueSchema = z.object({
 });
 
 export const authorizeSchema = z.object({
-  idTag: z.string().max(20),
+  idTag: z.string().min(1).max(20),
 });
 
 export const bootNotificationSchema = z.object({
-  chargePointVendor: z.string().max(20),
-  chargePointModel: z.string().max(20),
-  chargePointSerialNumber: z.string().max(25).optional(),
-  chargeBoxSerialNumber: z.string().max(25).optional(),
-  firmwareVersion: z.string().max(50).optional(),
-  iccid: z.string().max(20).optional(),
-  imsi: z.string().max(20).optional(),
-  meterType: z.string().max(25).optional(),
-  meterSerialNumber: z.string().max(25).optional(),
+  chargePointVendor: z.string().min(1).max(20),
+  chargePointModel: z.string().min(1).max(20),
+  chargePointSerialNumber: z.string().min(1).max(25).optional(),
+  chargeBoxSerialNumber: z.string().min(1).max(25).optional(),
+  firmwareVersion: z.string().min(1).max(50).optional(),
+  iccid: z.string().min(1).max(20).optional(),
+  imsi: z.string().min(1).max(20).optional(),
+  meterType: z.string().min(1).max(25).optional(),
+  meterSerialNumber: z.string().min(1).max(25).optional(),
 });
 
 export const dataTransferSchema = z.object({
-  vendorId: z.string().max(255),
-  messageId: z.string().max(50).optional(),
-  data: z.string().optional(),
+  vendorId: z.string().min(1).max(255),
+  messageId: z.string().min(1).max(50).optional(),
+  data: z.string().min(1).optional(),
 });
 
 export const diagnosticStatusNotifSchema = z.object({
@@ -164,7 +162,7 @@ export const statusNotifSchema = z.object({
     'OverVoltage',
     'WeakSignal',
   ]),
-  info: z.string().max(50).optional(),
+  info: z.string().min(1).max(50).optional(),
   status: z.enum([
     'Available',
     'Preparing',
@@ -177,8 +175,8 @@ export const statusNotifSchema = z.object({
     'Faulted',
   ]),
   timestamp: z.coerce.date().optional(),
-  vendorId: z.string().max(255).optional(),
-  vendorErrorCode: z.string().max(50).optional(),
+  vendorId: z.string().min(1).max(255).optional(),
+  vendorErrorCode: z.string().min(1).max(50).optional(),
 });
 
 export const stopTransactionSchema = z
