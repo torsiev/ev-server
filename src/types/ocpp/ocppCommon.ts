@@ -45,9 +45,9 @@ export enum OCPPErrorType {
   // Payload for Action is syntactically incorrect or not conform the PDU structure for Action
   FORMATION_VIOLATION = 'FormationViolation',
   // Payload is syntactically correct but at least one field contains an invalid value
-  PROPERTY__CONSTRAINT_VIOLATION = 'PropertyConstraintViolation',
+  PROPERTY_CONSTRAINT_VIOLATION = 'PropertyConstraintViolation',
   // Payload for Action is syntactically correct but at least one of the fields violates occurrence constraints
-  OCCURRENCE__CONSTRAINT_VIOLATION = 'OccurenceConstraintViolation',
+  OCCURRENCE_CONSTRAINT_VIOLATION = 'OccurenceConstraintViolation',
   // Payload for Action is syntactically correct but at least one of the fields violates data type constraints (e.g. "somestring" = 12)
   TYPE_CONSTRAINT_VIOLATION = 'TypeConstraintViolation',
   // Any other error not covered by the previous ones

@@ -1,6 +1,6 @@
 import { OutgoingHttpHeaders } from 'http';
 import internal from 'stream';
-import { StatusCodes, StatusCodesKey } from '../types/server';
+import { StatusCodes, StatusCodesKey } from 'types/server';
 
 /**
  * Helper function to cancel handshake process and send error response

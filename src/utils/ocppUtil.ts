@@ -1,4 +1,4 @@
-import { OCPPErrorType } from '../types/ocpp/ocppCommon';
+import { OCPPErrorType } from 'types/ocpp/ocppCommon';
 
 export class OCPPError implements Error {
   name: string;

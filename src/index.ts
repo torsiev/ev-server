@@ -1,7 +1,7 @@
+import { logger } from 'app/logger';
+import wsRouteHandler from 'routes/wsRouteHandler';
 import 'dotenv/config';
 import express from 'express';
-import { logger } from './app/logger';
-import wsRouteHandler from './routes/wsRouteHandler';
 
 const app = express();
 app.get('/', (req, res) => {

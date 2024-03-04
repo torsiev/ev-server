@@ -3,13 +3,13 @@ import internal from 'stream';
 import { RawData, ServerOptions, WebSocketServer, WebSocket } from 'ws';
 
 export default abstract class WebSocketController {
-  private wss: WebSocketServer;
+  #wss: WebSocketServer;
   readonly className = this.constructor.name;
 
   constructor(options?: ServerOptions) {
-    this.wss = new WebSocketServer(options);
+    this.#wss = new WebSocketServer(options);
 
-    this.wss.on('connection', (ws, req) => {
+    this.#wss.on('connection', (ws, req) => {
       ws.on('open', () => this.onOpen());
       ws.on('message', async (data, isBinary) => {
         await this.onMessage(ws, req, data, isBinary);
@@ -22,7 +22,7 @@ export default abstract class WebSocketController {
   }
 
   get getWss(): WebSocketServer {
-    return this.wss;
+    return this.#wss;
   }
 
   abstract handleUpgrade(
