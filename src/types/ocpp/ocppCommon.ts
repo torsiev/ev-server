@@ -16,7 +16,7 @@ export type OCPPErrorResponse = [
   string,
   OCPPErrorType,
   string,
-  Record<string, string>,
+  Record<string, unknown>,
 ];
 
 /**

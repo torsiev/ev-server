@@ -1,17 +1,20 @@
-import { IncomingMessage } from 'http';
-import { Duplex } from 'stream';
-import { RawData, WebSocket } from 'ws';
 import { logger } from 'app/logger';
+import WebSocketController from 'controllers/webSocketController';
+import { IncomingMessage } from 'http';
+import ocppClientService from 'services/ocppClientService';
+import { Duplex } from 'stream';
 import {
   OCPPActions,
+  OCPPErrorResponse,
   OCPPErrorType,
   OCPPIncomingRequest,
   OCPPMessageType,
+  OCPPOutgoingResponse,
 } from 'types/ocpp/ocppCommon';
 import { WssProtocol } from 'types/server';
-import { OCPPError, getClientId } from 'utils/ocppUtil';
+import { OCPPError, getClientId, logOCPPError } from 'utils/ocppUtil';
 import { abortHandshake } from 'utils/wsUtil';
-import WebSocketController from 'controllers/webSocketController';
+import { RawData, WebSocket } from 'ws';
 
 export default class OcppController extends WebSocketController {
   constructor() {
@@ -43,49 +46,77 @@ export default class OcppController extends WebSocketController {
     request: IncomingMessage,
     data: RawData,
   ) {
+    const message: OCPPIncomingRequest = JSON.parse(data.toString());
+    let responseData: Record<string, unknown> | undefined = undefined;
+
     try {
-      const message: OCPPIncomingRequest = JSON.parse(data.toString());
-      if (message[0] === OCPPMessageType.CALL) {
-        const action = message[2];
-        //TODO: handle response
-        switch (action) {
-          case OCPPActions.AUTHORIZE:
-            break;
-          case OCPPActions.BOOT_NOTIFICATION:
-            logger.info(data.toString(), { service: this.className });
-            break;
-          case OCPPActions.DATA_TRANSFER:
-            break;
-          case OCPPActions.DIAGNOSTICS_STATUS_NOTIF:
-            break;
-          case OCPPActions.FIRMWARE_STATUS_NOTIF:
-            break;
-          case OCPPActions.HEARTBEAT:
-            break;
-          case OCPPActions.METER_VALUES:
-            break;
-          case OCPPActions.START_TRANSACTION:
-            break;
-          case OCPPActions.STATUS_NOTIFICATION:
-            break;
-          case OCPPActions.STOP_TRANSACTION:
-            break;
-          default:
-            throw new OCPPError(
-              OCPPErrorType.NOT_IMPLEMENTED,
-              `Requested action: ${action} is unknown`,
-            );
-        }
+      if (message[0] !== OCPPMessageType.CALL) {
+        throw new OCPPError(
+          OCPPErrorType.FORMATION_VIOLATION,
+          'Payload for Action is syntactically incorrect',
+        );
+      }
+
+      const action = message[2];
+      switch (action) {
+        case OCPPActions.AUTHORIZE:
+          responseData = ocppClientService.authorize(message[3]);
+          break;
+        case OCPPActions.BOOT_NOTIFICATION:
+          responseData = ocppClientService.bootNotification(message[3]);
+          break;
+        case OCPPActions.DATA_TRANSFER:
+          break;
+        case OCPPActions.DIAGNOSTICS_STATUS_NOTIF:
+          break;
+        case OCPPActions.FIRMWARE_STATUS_NOTIF:
+          break;
+        case OCPPActions.HEARTBEAT:
+          responseData = ocppClientService.heartbeat(message[3]);
+          break;
+        case OCPPActions.METER_VALUES:
+          break;
+        case OCPPActions.START_TRANSACTION:
+          break;
+        case OCPPActions.STATUS_NOTIFICATION:
+          break;
+        case OCPPActions.STOP_TRANSACTION:
+          break;
+        default:
+          throw new OCPPError(
+            OCPPErrorType.NOT_IMPLEMENTED,
+            `Requested action: ${action} is unknown`,
+          );
+      }
+      // Send response to client
+      if (responseData) {
+        const res: OCPPOutgoingResponse = [
+          OCPPMessageType.CALL_RESULT,
+          message[1],
+          responseData,
+        ];
+        ws.send(JSON.stringify(res));
       }
     } catch (error) {
-      if (typeof error === 'string') {
-        logger.error(error, { service: this.className });
-      } else if (error instanceof OCPPError) {
-        logger.error(`${error.name}: ${error.message}`, {
-          service: this.className,
-        });
+      // Catch unhandled errors from ocppClientService
+      if (error instanceof OCPPError) {
+        logOCPPError(
+          this.className,
+          getClientId(request.url),
+          error.code,
+          error.message,
+          error.action,
+        );
+        // Send error response to client
         if (ws.readyState !== WebSocket.CLOSED) {
-          //TODO: send error response
+          const err: OCPPErrorResponse = [
+            OCPPMessageType.CALL_ERROR,
+            message[1],
+            error.code,
+            error.message,
+            error.details,
+          ];
+          ws.send(JSON.stringify(err));
         }
       } else if (error instanceof Error) {
         logger.error(error.message, { service: this.className });
@@ -117,6 +148,4 @@ export default class OcppController extends WebSocketController {
       },
     );
   }
-
-  //TODO: Create response handler function
 }
