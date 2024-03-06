@@ -3,14 +3,28 @@ import 'dotenv/config';
 import {
   AuthorizeResponse,
   BootNotificationResponse,
+  DataTransferResponse,
+  DiagnosticsStatusNotifResponse,
+  FirmwareStatusNotifResponse,
   HeartbeatResponse,
+  MeterValuesResponse,
+  StartTransactionResponse,
+  StatusNotifResponse,
+  StopTransactionResponse,
 } from 'types/ocpp/ocppClient';
 import { OCPPActions, OCPPErrorType } from 'types/ocpp/ocppCommon';
 import { OCPPError } from 'utils/ocppUtil';
 import {
   authorizeSchema,
   bootNotificationSchema,
+  dataTransferSchema,
+  diagnosticStatusNotifSchema,
+  firmwareStatusNotifSchema,
   heartbeatSchema,
+  meterValuesSchema,
+  startTransactionSchema,
+  statusNotifSchema,
+  stopTransactionSchema,
 } from 'validations/ocppValidation';
 import { z } from 'zod';
 
@@ -60,7 +74,7 @@ function authorize(payload: Record<string, unknown>): AuthorizeResponse {
   );
 
   logger.info(`User has been authorized with RFID card ${validated.idTag}`, {
-    service: service,
+    service,
   });
 
   return {
@@ -93,6 +107,54 @@ function bootNotification(
   };
 }
 
+function dataTransfer(payload: Record<string, unknown>): DataTransferResponse {
+  const validated = validateOCPP(
+    dataTransferSchema,
+    payload,
+    OCPPActions.DATA_TRANSFER,
+  );
+
+  logger.info(`Data transfer received from ${validated.vendorId}`, { service });
+
+  return {
+    status: 'Accepted',
+  };
+}
+
+function diagnosticsStatusNotif(
+  payload: Record<string, unknown>,
+): DiagnosticsStatusNotifResponse {
+  const validated = validateOCPP(
+    diagnosticStatusNotifSchema,
+    payload,
+    OCPPActions.DIAGNOSTICS_STATUS_NOTIF,
+  );
+
+  logger.info(
+    `Diagnostics status notification received with status: ${validated.status}`,
+    { service },
+  );
+
+  return {};
+}
+
+function firmwareStatusNotif(
+  payload: Record<string, unknown>,
+): FirmwareStatusNotifResponse {
+  const validated = validateOCPP(
+    firmwareStatusNotifSchema,
+    payload,
+    OCPPActions.FIRMWARE_STATUS_NOTIF,
+  );
+
+  logger.info(
+    `Firmware status notification received with status: ${validated.status}`,
+    { service },
+  );
+
+  return {};
+}
+
 function heartbeat(payload: Record<string, unknown>): HeartbeatResponse {
   validateOCPP(heartbeatSchema, payload, OCPPActions.HEARTBEAT);
 
@@ -101,8 +163,83 @@ function heartbeat(payload: Record<string, unknown>): HeartbeatResponse {
   };
 }
 
+function meterValues(payload: Record<string, unknown>): MeterValuesResponse {
+  const validated = validateOCPP(
+    meterValuesSchema,
+    payload,
+    OCPPActions.METER_VALUES,
+  );
+
+  logger.info(`Meter values received from connector ${validated.connectorId}`, {
+    service,
+  });
+
+  return {};
+}
+
+function startTransaction(
+  payload: Record<string, unknown>,
+): StartTransactionResponse {
+  const validated = validateOCPP(
+    startTransactionSchema,
+    payload,
+    OCPPActions.START_TRANSACTION,
+  );
+
+  logger.info(`Transaction started on connector ${validated.connectorId}`, {
+    service,
+  });
+
+  return {
+    transactionId: 1,
+    idTagInfo: {
+      status: 'Accepted',
+    },
+  };
+}
+
+function statusNotif(payload: Record<string, unknown>): StatusNotifResponse {
+  const validated = validateOCPP(
+    statusNotifSchema,
+    payload,
+    OCPPActions.STATUS_NOTIFICATION,
+  );
+
+  logger.info(
+    `Status notification received from connector ${validated.connectorId}`,
+    { service },
+  );
+
+  return {};
+}
+
+function stopTransaction(
+  payload: Record<string, unknown>,
+): StopTransactionResponse {
+  const validated = validateOCPP(
+    stopTransactionSchema,
+    payload,
+    OCPPActions.STOP_TRANSACTION,
+  );
+
+  logger.info(`Transaction stopped: ${validated.transactionId}`, { service });
+
+  return {
+    idTagInfo: {
+      status: 'Accepted',
+    },
+  };
+}
+
 export default {
   authorize,
   bootNotification,
+  dataTransfer,
+  diagnosticsStatusNotif,
+  firmwareStatusNotif,
   heartbeat,
+  meterValues,
+  startTransaction,
+  statusNotif,
+  stopTransaction,
 };

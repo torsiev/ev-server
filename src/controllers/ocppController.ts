@@ -66,21 +66,28 @@ export default class OcppController extends WebSocketController {
           responseData = ocppClientService.bootNotification(message[3]);
           break;
         case OCPPActions.DATA_TRANSFER:
+          responseData = ocppClientService.dataTransfer(message[3]);
           break;
         case OCPPActions.DIAGNOSTICS_STATUS_NOTIF:
+          responseData = ocppClientService.diagnosticsStatusNotif(message[3]);
           break;
         case OCPPActions.FIRMWARE_STATUS_NOTIF:
+          responseData = ocppClientService.firmwareStatusNotif(message[3]);
           break;
         case OCPPActions.HEARTBEAT:
           responseData = ocppClientService.heartbeat(message[3]);
           break;
         case OCPPActions.METER_VALUES:
+          responseData = ocppClientService.meterValues(message[3]);
           break;
         case OCPPActions.START_TRANSACTION:
+          responseData = ocppClientService.startTransaction(message[3]);
           break;
         case OCPPActions.STATUS_NOTIFICATION:
+          responseData = ocppClientService.statusNotif(message[3]);
           break;
         case OCPPActions.STOP_TRANSACTION:
+          responseData = ocppClientService.stopTransaction(message[3]);
           break;
         default:
           throw new OCPPError(
