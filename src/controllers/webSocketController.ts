@@ -3,8 +3,9 @@ import internal from 'stream';
 import { RawData, ServerOptions, WebSocketServer, WebSocket } from 'ws';
 
 export default abstract class WebSocketController {
-  #wss: WebSocketServer;
   readonly className = this.constructor.name;
+  #wss: WebSocketServer;
+  #clients = new Map<string, WebSocket>();
 
   constructor(options?: ServerOptions) {
     this.#wss = new WebSocketServer(options);
@@ -21,8 +22,20 @@ export default abstract class WebSocketController {
     });
   }
 
-  get getWss(): WebSocketServer {
+  get wss(): WebSocketServer {
     return this.#wss;
+  }
+
+  get clients(): Map<string, WebSocket> {
+    return this.#clients;
+  }
+
+  addClient(id: string, ws: WebSocket) {
+    this.#clients.set(id, ws);
+  }
+
+  removeClient(id: string) {
+    this.#clients.delete(id);
   }
 
   abstract handleUpgrade(

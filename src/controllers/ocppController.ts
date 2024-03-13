@@ -1,5 +1,6 @@
 import { logger } from 'app/logger';
 import WebSocketController from 'controllers/webSocketController';
+import { Request, Response } from 'express';
 import { IncomingMessage } from 'http';
 import ocppClientService from 'services/ocppClientService';
 import { Duplex } from 'stream';
@@ -34,8 +35,9 @@ export default class OcppController extends WebSocketController {
       return;
     }
 
-    this.getWss.handleUpgrade(request, socket, head, (ws, req) => {
-      this.getWss.emit('connection', ws, req);
+    this.wss.handleUpgrade(request, socket, head, (ws, req) => {
+      this.addClient(getClientId(req.url), ws);
+      this.wss.emit('connection', ws, req);
     });
   }
 
@@ -148,11 +150,19 @@ export default class OcppController extends WebSocketController {
     code: number,
     reason: Buffer,
   ): void {
+    this.removeClient(getClientId(request.url));
     logger.info(
       `Connection with ${getClientId(request.url)} disconnected ${code} ${reason}`,
       {
         service: this.className,
       },
     );
+  }
+
+  get getClientsId() {
+    return (req: Request, res: Response) => {
+      const id = Array.from(this.clients.keys());
+      res.send(id);
+    };
   }
 }
