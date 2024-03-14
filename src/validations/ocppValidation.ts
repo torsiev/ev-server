@@ -1,7 +1,7 @@
 import z from 'zod';
 
 // --------------------------------------
-// Defines OCPP request payload validation schema
+// Defines OCPP client request payload validation schema
 // --------------------------------------
 const sampledValueSchema = z.object({
   value: z.string().min(1),
@@ -209,3 +209,119 @@ export const stopTransactionSchema = z
       .optional(),
   })
   .merge(authorizeSchema.partial());
+
+// -----------------------------------------------------
+// Define OCPP client response payload validation schema
+// -----------------------------------------------------
+export const cancelReservationResSchema = z.object({
+  status: z.enum(['Accepted', 'Rejected']),
+});
+
+export const changeAvailabilityResSchema = z.object({
+  status: z.enum(['Accepted', 'Rejected', 'Scheduled']),
+});
+
+export const changeConfigResSchema = z.object({
+  status: z.enum(['Accepted', 'Rejected', 'RebootRequired', 'NotSupported']),
+});
+
+export const clearCacheResSchema = z.object({
+  status: z.enum(['Accepted', 'Rejected']),
+});
+
+export const clearChargingProfileResSchema = z.object({
+  status: z.enum(['Accepted', 'Unknown']),
+});
+
+export const dataTransferResSchema = z.object({
+  status: z.enum([
+    'Accepted',
+    'Rejected',
+    'UnknownMessageId',
+    'UnknownVendorId',
+  ]),
+  data: z.string().min(1).optional(),
+});
+
+export const getCompositeScheduleResSchema = z.object({
+  status: z.enum(['Accepted', 'Rejected']),
+  connectorId: z.number().optional(),
+  scheduleStart: z.coerce.date().optional(),
+  chargingSchedule: z
+    .object({
+      duration: z.number().optional(),
+      startSchedule: z.coerce.date().optional(),
+      chargingRateUnit: z.enum(['A', 'W']),
+      chargingSchedulePeriod: z.array(
+        z.object({
+          startPeriod: z.number(),
+          limit: z.number().multipleOf(0.1),
+          numberPhases: z.number().optional(),
+        }),
+      ),
+    })
+    .optional(),
+});
+
+export const getConfigResSchema = z
+  .object({
+    configurationKey: z.array(
+      z.object({
+        key: z.string().min(1).max(50),
+        readonly: z.boolean(),
+        value: z.string().min(1).max(500).optional(),
+      }),
+    ),
+    unknownKey: z.array(z.string().min(1).max(50)),
+  })
+  .partial();
+
+export const getDiagnosticsResSchema = z
+  .object({
+    fileName: z.string().min(1).max(255),
+  })
+  .partial();
+
+export const getLocalListVersionResSchema = z.object({
+  listVersion: z.number(),
+});
+
+export const remoteStartTransactionResSchema = z.object({
+  status: z.enum(['Accepted', 'Rejected']),
+});
+
+export const remoteStopTransactionResSchema = z.object({
+  status: z.enum(['Accepted', 'Rejected']),
+});
+
+export const reserveNowResSchema = z.object({
+  status: z.enum([
+    'Accepted',
+    'Faulted',
+    'Occupied',
+    'Rejected',
+    'unavailable',
+  ]),
+});
+
+export const resetResSchema = z.object({
+  status: z.enum(['Accepted', 'Rejected']),
+});
+
+export const sendLocalListResSchema = z.object({
+  status: z.enum(['Accepted', 'Failed', 'NotSupported', 'VersionMismatch']),
+});
+
+export const setChargingProfileResSchema = z.object({
+  status: z.enum(['Accepted', 'Rejected', 'NotSupported']),
+});
+
+export const triggerMessageResSchema = z.object({
+  status: z.enum(['Accepted', 'Rejected', 'NotImplemented']),
+});
+
+export const unlockConnectorResSchema = z.object({
+  status: z.enum(['Unlocked', 'UnlockFailed', 'NotSupported']),
+});
+
+export const updateFirmwareResSchema = z.object({});
