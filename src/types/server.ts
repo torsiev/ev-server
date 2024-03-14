@@ -8,7 +8,7 @@ export enum WssRoute {
   WS = '/ws',
 }
 
-export const StatusCodes = {
+export const STATUS_CODES = {
   100: 'Continue',
   101: 'Switching Protocols',
   102: 'Processing',
@@ -74,4 +74,4 @@ export const StatusCodes = {
   511: 'Network Authentication Required',
 } as const;
 
-export type StatusCodesKey = keyof typeof StatusCodes;
+export type StatusCodesKey = keyof typeof STATUS_CODES;

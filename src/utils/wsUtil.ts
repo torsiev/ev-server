@@ -1,6 +1,6 @@
 import { OutgoingHttpHeaders } from 'http';
 import internal from 'stream';
-import { StatusCodes, StatusCodesKey } from 'types/server';
+import { STATUS_CODES, StatusCodesKey } from 'types/server';
 
 /**
  * Helper function to cancel handshake process and send error response
@@ -16,7 +16,7 @@ export function abortHandshake(
   message?: string,
   headers?: OutgoingHttpHeaders,
 ) {
-  const contentLength = message || StatusCodes[code];
+  const contentLength = message || STATUS_CODES[code];
 
   if (socket.writable && contentLength) {
     const headersOut: OutgoingHttpHeaders = {
@@ -27,7 +27,7 @@ export function abortHandshake(
     };
 
     socket.write(
-      `HTTP/1.1 ${code} ${StatusCodes[code]}\r\n` +
+      `HTTP/1.1 ${code} ${STATUS_CODES[code]}\r\n` +
         Object.keys(headersOut)
           .map((h) => `${h}: ${headersOut[h]}`)
           .join('\r\n') +

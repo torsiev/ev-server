@@ -18,7 +18,22 @@
   "rules": {
     "semi": "off",
     "@stylistic/semi": ["error", "always"],
-    "no-console": "error"
+    "no-console": "error",
+    "@typescript-eslint/naming-convention": [
+      "warn",
+      {
+        "selector": ["variable", "classProperty"],
+        "format": ["camelCase", "UPPER_CASE"]
+      },
+      {
+        "selector": ["function", "parameter", "classMethod"],
+        "format": ["camelCase"]
+      },
+      {
+        "selector": "typeLike",
+        "format": ["PascalCase"]
+      }
+    ]
   },
   "ignorePatterns": ["dist/**/*.js"]
 }
