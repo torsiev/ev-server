@@ -1,6 +1,6 @@
 import { OutgoingHttpHeaders } from 'http';
 import internal from 'stream';
-import { STATUS_CODES, StatusCodesKey } from 'types/server';
+import { STATUS_CODES, StatusCodes } from 'types/server';
 
 /**
  * Helper function to cancel handshake process and send error response
@@ -12,7 +12,7 @@ import { STATUS_CODES, StatusCodesKey } from 'types/server';
 
 export function abortHandshake(
   socket: internal.Duplex,
-  code: StatusCodesKey,
+  code: StatusCodes,
   message?: string,
   headers?: OutgoingHttpHeaders,
 ) {

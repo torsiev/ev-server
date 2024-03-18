@@ -17,8 +17,18 @@
   "parser": "@typescript-eslint/parser",
   "rules": {
     "semi": "off",
+    "no-unused-vars": "off",
     "@stylistic/semi": ["error", "always"],
     "no-console": "error",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "args": "after-used",
+        "argsIgnorePattern": "^_",
+        "destructuredArrayIgnorePattern": "^_",
+        "ignoreRestSiblings": true
+      }
+    ],
     "@typescript-eslint/naming-convention": [
       "warn",
       {
@@ -27,7 +37,8 @@
       },
       {
         "selector": ["function", "parameter", "classMethod"],
-        "format": ["camelCase"]
+        "format": ["camelCase"],
+        "leadingUnderscore": "allow"
       },
       {
         "selector": "typeLike",

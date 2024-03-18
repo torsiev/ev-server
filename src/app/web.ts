@@ -1,5 +1,9 @@
 import express from 'express';
 import { apiRouter } from 'routes/api';
+import {
+  notFoundMiddleware,
+  errorMiddleware,
+} from 'middlewares/errorMiddleware';
 
 export const web = express();
 
@@ -11,3 +15,6 @@ web.get('/', (req, res) => {
     data: 'Hello World!',
   });
 });
+
+web.use(notFoundMiddleware);
+web.use(errorMiddleware);
