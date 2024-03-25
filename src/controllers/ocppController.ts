@@ -1,8 +1,8 @@
 import { logger } from 'app/logger';
 import WebSocketController from 'controllers/webSocketController';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { IncomingMessage } from 'http';
-import ocppClientService from 'services/ocppClientService';
+import OcppClientService from 'services/ocppClientService';
 import { Duplex } from 'stream';
 import {
   OCPPActions,
@@ -13,18 +13,22 @@ import {
   OCPPOutgoingResponse,
 } from 'types/ocpp/ocppCommon';
 import { WssProtocol } from 'types/server';
-import { OCPPError, getClientId, logOCPPError } from 'utils/ocppUtil';
+import { OCPPError, logOCPPError, urlToClientId } from 'utils/ocppUtil';
 import { abortHandshake } from 'utils/wsUtil';
 import { RawData, WebSocket } from 'ws';
 
 export default class OcppController extends WebSocketController {
-  constructor() {
+  #ocppClientService: OcppClientService;
+
+  constructor(ocppClientService: OcppClientService) {
     super({
       noServer: true,
       handleProtocols(protocols) {
         return protocols.has(WssProtocol.OCPP16) ? WssProtocol.OCPP16 : false;
       },
     });
+
+    this.#ocppClientService = ocppClientService;
   }
 
   handleUpgrade(request: IncomingMessage, socket: Duplex, head: Buffer): void {
@@ -36,7 +40,7 @@ export default class OcppController extends WebSocketController {
     }
 
     this.wss.handleUpgrade(request, socket, head, (ws, req) => {
-      this.addClient(getClientId(req.url), ws);
+      this.addClient(urlToClientId(req.url), ws);
       this.wss.emit('connection', ws, req);
     });
   }
@@ -48,10 +52,11 @@ export default class OcppController extends WebSocketController {
     request: IncomingMessage,
     data: RawData,
   ) {
-    const message: OCPPIncomingRequest = JSON.parse(data.toString());
-    let responseData: Record<string, unknown> | undefined = undefined;
-
+    let message: OCPPIncomingRequest | OCPPOutgoingResponse;
     try {
+      message = JSON.parse(data.toString());
+      let responseData: Record<string, unknown> | undefined = undefined;
+
       if (message[0] !== OCPPMessageType.CALL) {
         throw new OCPPError(
           OCPPErrorType.FORMATION_VIOLATION,
@@ -59,37 +64,44 @@ export default class OcppController extends WebSocketController {
         );
       }
 
+      // Check if message is outgoing response from charging station
+      if (message.length === 3) return;
+
       const action = message[2];
       switch (action) {
         case OCPPActions.AUTHORIZE:
-          responseData = ocppClientService.authorize(message[3]);
+          responseData = this.#ocppClientService.authorize(message[3]);
           break;
         case OCPPActions.BOOT_NOTIFICATION:
-          responseData = ocppClientService.bootNotification(message[3]);
+          responseData = this.#ocppClientService.bootNotification(message[3]);
           break;
         case OCPPActions.DATA_TRANSFER:
-          responseData = ocppClientService.dataTransfer(message[3]);
+          responseData = this.#ocppClientService.dataTransfer(message[3]);
           break;
         case OCPPActions.DIAGNOSTICS_STATUS_NOTIF:
-          responseData = ocppClientService.diagnosticsStatusNotif(message[3]);
+          responseData = this.#ocppClientService.diagnosticsStatusNotif(
+            message[3],
+          );
           break;
         case OCPPActions.FIRMWARE_STATUS_NOTIF:
-          responseData = ocppClientService.firmwareStatusNotif(message[3]);
+          responseData = this.#ocppClientService.firmwareStatusNotif(
+            message[3],
+          );
           break;
         case OCPPActions.HEARTBEAT:
-          responseData = ocppClientService.heartbeat(message[3]);
+          responseData = this.#ocppClientService.heartbeat(message[3]);
           break;
         case OCPPActions.METER_VALUES:
-          responseData = ocppClientService.meterValues(message[3]);
+          responseData = this.#ocppClientService.meterValues(message[3]);
           break;
         case OCPPActions.START_TRANSACTION:
-          responseData = ocppClientService.startTransaction(message[3]);
+          responseData = this.#ocppClientService.startTransaction(message[3]);
           break;
         case OCPPActions.STATUS_NOTIFICATION:
-          responseData = ocppClientService.statusNotif(message[3]);
+          responseData = this.#ocppClientService.statusNotif(message[3]);
           break;
         case OCPPActions.STOP_TRANSACTION:
-          responseData = ocppClientService.stopTransaction(message[3]);
+          responseData = this.#ocppClientService.stopTransaction(message[3]);
           break;
         default:
           throw new OCPPError(
@@ -111,7 +123,7 @@ export default class OcppController extends WebSocketController {
       if (error instanceof OCPPError) {
         logOCPPError(
           this.className,
-          getClientId(request.url),
+          urlToClientId(request.url),
           error.code,
           error.message,
           error.action,
@@ -120,7 +132,7 @@ export default class OcppController extends WebSocketController {
         if (ws.readyState !== WebSocket.CLOSED) {
           const err: OCPPErrorResponse = [
             OCPPMessageType.CALL_ERROR,
-            message[1],
+            message![1],
             error.code,
             error.message,
             error.details,
@@ -129,6 +141,9 @@ export default class OcppController extends WebSocketController {
         }
       } else if (error instanceof Error) {
         logger.error(error.message, { service: this.className });
+        if (ws.readyState !== WebSocket.CLOSED) {
+          ws.terminate();
+        }
       }
     }
   }
@@ -150,9 +165,9 @@ export default class OcppController extends WebSocketController {
     code: number,
     reason: Buffer,
   ): void {
-    this.removeClient(getClientId(request.url));
+    this.removeClient(urlToClientId(request.url));
     logger.info(
-      `Connection with ${getClientId(request.url)} disconnected ${code} ${reason}`,
+      `Connection with ${urlToClientId(request.url)} disconnected ${code} ${reason}`,
       {
         service: this.className,
       },
