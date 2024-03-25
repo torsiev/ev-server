@@ -3,6 +3,7 @@
 // they can be accessed from other packages.
 // -------------------------------------------------------------------
 
+import OcppClientService from 'services/ocppClientService';
 import OcppController from './ocppController';
 
-export const ocppController = new OcppController();
+export const ocppController = new OcppController(new OcppClientService());

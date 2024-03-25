@@ -19,7 +19,7 @@ export class OCPPError extends Error {
   }
 }
 
-export function getClientId(url?: string): string {
+export function urlToClientId(url?: string): string {
   if (!url) return '';
 
   const paths = url?.split('/');

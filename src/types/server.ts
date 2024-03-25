@@ -74,4 +74,4 @@ export const STATUS_CODES = {
   511: 'Network Authentication Required',
 } as const;
 
-export type StatusCodesKey = keyof typeof STATUS_CODES;
+export type StatusCodes = keyof typeof STATUS_CODES;
