@@ -1,6 +1,6 @@
 import { logger } from 'app/logger';
 import WebSocketController from 'controllers/webSocketController';
-import type { Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { IncomingMessage } from 'http';
 import OcppClientService from 'services/ocppClientService';
 import { Duplex } from 'stream';
@@ -14,6 +14,7 @@ import {
 } from 'types/ocpp/ocppCommon';
 import { WssProtocol } from 'types/server';
 import { OCPPError, logOCPPError, urlToClientId } from 'utils/ocppUtil';
+import { RestError } from 'utils/restError';
 import { abortHandshake } from 'utils/wsUtil';
 import { RawData, WebSocket } from 'ws';
 
@@ -178,6 +179,153 @@ export default class OcppController extends WebSocketController {
     return (req: Request, res: Response) => {
       const id = Array.from(this.clients.keys());
       res.send(id);
+    };
+  }
+
+  getClientWs(id: string) {
+    const client = this.clients.get(id);
+    if (!client) {
+      throw new RestError(404, 'Client not found');
+    }
+
+    return client;
+  }
+
+  // Helper method to handle WebSocket response from charging station
+  #wsClientResponse(ws: WebSocket): Promise<OCPPOutgoingResponse> {
+    return new Promise((resolve, reject) => {
+      ws.on('message', (data) => {
+        const message: OCPPOutgoingResponse = JSON.parse(data.toString());
+        resolve(message);
+      });
+
+      ws.on('close', () =>
+        reject(new RestError(410, 'Charging station disconnected')),
+      );
+
+      ws.on('error', (error) => {
+        reject(error);
+      });
+    });
+  }
+
+  get changeAvailability() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const ws = this.getClientWs(req.params.id);
+
+        ws.send(JSON.stringify(['Call', 'changeAvailability']));
+
+        const response = await this.#wsClientResponse(ws);
+        res.json(response);
+      } catch (error) {
+        next(error);
+      }
+    };
+  }
+
+  get changeConfiguration() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const ws = this.getClientWs(req.params.id);
+
+        ws.send(JSON.stringify(['Call', 'changeConfiguration']));
+
+        const response = await this.#wsClientResponse(ws);
+        res.json(response);
+      } catch (error) {
+        next(error);
+      }
+    };
+  }
+
+  get clearCache() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const ws = this.getClientWs(req.params.id);
+
+        ws.send(JSON.stringify(['Call', 'clearCache']));
+
+        const response = await this.#wsClientResponse(ws);
+        res.json(response);
+      } catch (error) {
+        next(error);
+      }
+    };
+  }
+
+  get getConfiguration() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const ws = this.getClientWs(req.params.id);
+
+        ws.send(JSON.stringify(['Call', 'getConfiguration']));
+
+        const response = await this.#wsClientResponse(ws);
+        res.json(response);
+      } catch (error) {
+        next(error);
+      }
+    };
+  }
+
+  get remoteStartTransaction() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const ws = this.getClientWs(req.params.id);
+
+        ws.send(JSON.stringify(['Call', 'remoteStartTransaction']));
+
+        const response = await this.#wsClientResponse(ws);
+        res.json(response);
+      } catch (error) {
+        next(error);
+      }
+    };
+  }
+
+  get remoteStopTransaction() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const ws = this.getClientWs(req.params.id);
+
+        ws.send(JSON.stringify(['Call', 'remoteStopTransaction']));
+
+        const response = await this.#wsClientResponse(ws);
+        res.json(response);
+      } catch (error) {
+        next(error);
+      }
+    };
+  }
+
+  get reset() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const ws = this.getClientWs(req.params.id);
+
+        ws.send(JSON.stringify(['Call', 'reset']));
+
+        const response = await this.#wsClientResponse(ws);
+        res.json(response);
+      } catch (error) {
+        next(error);
+      }
+    };
+  }
+
+  get unlockConnector() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const ws = this.getClientWs(req.params.id);
+
+        ws.send(JSON.stringify(['Call', 'unlockConnector']));
+
+        const response = await this.#wsClientResponse(ws);
+        res.json(response);
+      } catch (error) {
+        next(error);
+      }
     };
   }
 }
