@@ -211,26 +211,61 @@ export const stopTransactionSchema = z
   .merge(authorizeSchema.partial());
 
 // -----------------------------------------------------
-// Define OCPP client response payload validation schema
+// Define OCPP client payload validation schema
 // -----------------------------------------------------
+
+export const cancelReservationReqSchema = z.object({
+  reservationId: z.number(),
+});
+
 export const cancelReservationResSchema = z.object({
   status: z.enum(['Accepted', 'Rejected']),
+});
+
+export const changeAvailabilityReqSchema = z.object({
+  connectorId: z.number(),
+  type: z.enum(['Inoperative', 'Operative']),
 });
 
 export const changeAvailabilityResSchema = z.object({
   status: z.enum(['Accepted', 'Rejected', 'Scheduled']),
 });
 
+export const changeConfigReqSchema = z.object({
+  key: z.string().min(1).max(50),
+  value: z.string().min(1).max(500),
+});
+
 export const changeConfigResSchema = z.object({
   status: z.enum(['Accepted', 'Rejected', 'RebootRequired', 'NotSupported']),
 });
+
+export const clearCacheReqSchema = z.object({});
 
 export const clearCacheResSchema = z.object({
   status: z.enum(['Accepted', 'Rejected']),
 });
 
+export const clearChargingProfileReqSchema = z
+  .object({
+    id: z.number(),
+    connectorId: z.number(),
+    chargingProfilePurpose: z.enum([
+      'ChargePointMaxProfile',
+      'TxDefaultProfile',
+      'TxProfile',
+    ]),
+  })
+  .partial();
+
 export const clearChargingProfileResSchema = z.object({
   status: z.enum(['Accepted', 'Unknown']),
+});
+
+export const dataTransferReqSchema = z.object({
+  vendorId: z.string().min(1).max(255),
+  messageId: z.string().min(1).max(50).optional(),
+  data: z.string().optional(),
 });
 
 export const dataTransferResSchema = z.object({
@@ -241,6 +276,12 @@ export const dataTransferResSchema = z.object({
     'UnknownVendorId',
   ]),
   data: z.string().min(1).optional(),
+});
+
+export const getCompositeScheduleReqSchema = z.object({
+  connectorId: z.number(),
+  duration: z.number(),
+  chargingRateUnit: z.enum(['A', 'W']).optional(),
 });
 
 export const getCompositeScheduleResSchema = z.object({
@@ -263,6 +304,12 @@ export const getCompositeScheduleResSchema = z.object({
     .optional(),
 });
 
+export const getConfigReqSchema = z
+  .object({
+    key: z.array(z.string().min(1).max(50)),
+  })
+  .partial();
+
 export const getConfigResSchema = z
   .object({
     configurationKey: z.array(
@@ -276,22 +323,78 @@ export const getConfigResSchema = z
   })
   .partial();
 
+export const getDiagnosticsReqSchema = z.object({
+  location: z.string(),
+  retries: z.number().optional(),
+  retryInterval: z.number().optional(),
+  startTime: z.coerce.date().optional(),
+  stoptTime: z.coerce.date().optional(),
+});
+
 export const getDiagnosticsResSchema = z
   .object({
     fileName: z.string().min(1).max(255),
   })
   .partial();
 
+export const getLocalListVersionReqSchema = z.object({});
+
 export const getLocalListVersionResSchema = z.object({
   listVersion: z.number(),
+});
+
+export const remoteStartTransactionReqSchema = z.object({
+  connectorId: z.number().optional(),
+  idTag: z.string().min(1).max(20),
+  chargingProfile: z
+    .object({
+      chargingProfileId: z.number(),
+      transactionId: z.number().optional(),
+      stackLevel: z.number(),
+      chargingProfilePurpose: z.enum([
+        'ChargePointMaxProfile',
+        'TxDefaultProfile',
+        'TxProfile',
+      ]),
+      chargingProfileKind: z.enum(['Absolute', 'Recurring', 'Relative']),
+      recurencyKind: z.enum(['Daily', 'Weekly']).optional(),
+      validFrom: z.coerce.date().optional(),
+      validTo: z.coerce.date().optional(),
+      chargingSchedule: z.object({
+        duration: z.number().optional(),
+        startShedule: z.coerce.date().optional(),
+        chargingRateUnit: z.enum(['A', 'W']),
+        chargingSchedulePeriod: z.array(
+          z.object({
+            startPeriod: z.number(),
+            limit: z.number().multipleOf(0.1),
+            numberPhase: z.number().optional(),
+          }),
+        ),
+        minChargingRate: z.number().multipleOf(0.1),
+      }),
+    })
+    .optional(),
 });
 
 export const remoteStartTransactionResSchema = z.object({
   status: z.enum(['Accepted', 'Rejected']),
 });
 
+export const remoteStopTransactionReqSchema = z.object({
+  transactionId: z.number(),
+});
+
 export const remoteStopTransactionResSchema = z.object({
   status: z.enum(['Accepted', 'Rejected']),
+});
+
+export const reserveNowReqSchema = z.object({
+  connectorId: z.number(),
+  expiryDate: z.coerce.date(),
+  idTag: z.string().min(1).max(20),
+  parentIdTag: z.string().min(1).max(20).optional(),
+  reservationId: z.number(),
 });
 
 export const reserveNowResSchema = z.object({
@@ -304,24 +407,107 @@ export const reserveNowResSchema = z.object({
   ]),
 });
 
+export const resetReqSchema = z.object({
+  type: z.enum(['Hard', 'Soft']),
+});
+
 export const resetResSchema = z.object({
   status: z.enum(['Accepted', 'Rejected']),
+});
+
+export const sendLocalListReqSchema = z.object({
+  listVersion: z.number(),
+  localAuthorizationList: z
+    .array(
+      z.object({
+        idTag: z.string().min(1).max(50),
+        idTagInfo: z
+          .object({
+            expiryDate: z.coerce.date().optional(),
+            parentId: z.string().min(1).max(20).optional(),
+            status: z.enum([
+              'Accepted',
+              'Blocked',
+              'Expired',
+              'Invalid',
+              'ConcurrentTx',
+            ]),
+          })
+          .optional(),
+      }),
+    )
+    .optional(),
+  updateType: z.enum(['Differential', 'Full']),
 });
 
 export const sendLocalListResSchema = z.object({
   status: z.enum(['Accepted', 'Failed', 'NotSupported', 'VersionMismatch']),
 });
 
+export const setChargingProfileReqSchema = z.object({
+  connectionId: z.number(),
+  csChargingProfiles: z.object({
+    chargingProfileId: z.number(),
+    transcationId: z.number().optional(),
+    stackLevel: z.number(),
+    chargingProfilePurpose: z.enum([
+      'ChargePointMaxProfile',
+      'TxDefaultProfile',
+      'TxProfile',
+    ]),
+    chargingProfileKind: z.enum(['Absolute', 'Recurring', 'Relative']),
+    reccurencyKind: z.enum(['Daily', 'Weekly']).optional(),
+    validFrom: z.coerce.date().optional(),
+    validTo: z.coerce.date().optional(),
+    chargingSchedule: z.object({
+      duration: z.number().optional(),
+      startSchedule: z.coerce.date().optional(),
+      chargingRateUnit: z.enum(['A', 'W']),
+      chargingSchedulePeriod: z.array(
+        z.object({
+          startPeriod: z.number(),
+          limit: z.number().multipleOf(0.1),
+          numberPhases: z.number().optional(),
+        }),
+      ),
+      minChargingRate: z.number().multipleOf(0.1).optional(),
+    }),
+  }),
+});
+
 export const setChargingProfileResSchema = z.object({
   status: z.enum(['Accepted', 'Rejected', 'NotSupported']),
+});
+
+export const triggerMessageReqSchema = z.object({
+  requestedMessage: z.enum([
+    'BootNotification',
+    'DiagnosticsStatusNotification',
+    'FirmwareStatusNotification',
+    'Heartbeat',
+    'MeterValues',
+    'StatusNotification',
+  ]),
+  connectorId: z.number().optional(),
 });
 
 export const triggerMessageResSchema = z.object({
   status: z.enum(['Accepted', 'Rejected', 'NotImplemented']),
 });
 
+export const unlockConnectorReqSchema = z.object({
+  connectorId: z.number(),
+});
+
 export const unlockConnectorResSchema = z.object({
   status: z.enum(['Unlocked', 'UnlockFailed', 'NotSupported']),
+});
+
+export const updateFirmwareReqSchema = z.object({
+  location: z.string(),
+  retries: z.number().optional(),
+  retrieveData: z.coerce.date(),
+  retrieveInterval: z.number().optional(),
 });
 
 export const updateFirmwareResSchema = z.object({});
