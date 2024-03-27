@@ -12,8 +12,8 @@ import {
   StatusNotifResponse,
   StopTransactionResponse,
 } from 'types/ocpp/ocppClient';
-import { OCPPActions, OCPPErrorType } from 'types/ocpp/ocppCommon';
-import { OCPPError } from 'utils/ocppUtil';
+import { OCPPActions } from 'types/ocpp/ocppCommon';
+import { validateOCPP } from 'utils/ocppUtil';
 import {
   authorizeSchema,
   bootNotificationSchema,
@@ -26,45 +26,8 @@ import {
   statusNotifSchema,
   stopTransactionSchema,
 } from 'validations/ocppValidation';
-import { z } from 'zod';
 
 const service = 'OCPPClientService';
-
-/**
- * Helper function to validate OCPP payload
- * @param schema OCPP Zod schema
- * @param payload Data to validate
- * @param action What action is being validated
- * @returns
- */
-function validateOCPP<T extends z.ZodTypeAny>(
-  schema: T,
-  payload: Record<string, unknown>,
-  action: OCPPActions,
-): z.infer<T> {
-  const validated = schema.safeParse(payload);
-
-  if (!validated.success) {
-    const errorCode = validated.error.errors.map((err) => err.code);
-    if (errorCode.includes('too_big') || errorCode.includes('too_small')) {
-      throw new OCPPError(
-        OCPPErrorType.PROPERTY_CONSTRAINT_VIOLATION,
-        'Invalid payload value',
-        action,
-        { details: validated.error.issues },
-      );
-    } else {
-      throw new OCPPError(
-        OCPPErrorType.TYPE_CONSTRAINT_VIOLATION,
-        'Invalid payload type',
-        action,
-        { details: validated.error.issues },
-      );
-    }
-  }
-
-  return validated.data;
-}
 
 export default class OcppClientService {
   authorize(payload: Record<string, unknown>): AuthorizeResponse {

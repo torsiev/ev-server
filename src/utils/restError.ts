@@ -5,15 +5,11 @@ import { StatusCodes } from 'types/server';
  * @property status - HTTP status code
  * @property details - Additional error details
  */
-export class RestError extends Error {
+export class RestError<T> extends Error {
   status: StatusCodes;
-  details: Record<string, unknown> | undefined;
+  details: T | undefined;
 
-  constructor(
-    status: StatusCodes,
-    message: string,
-    details?: Record<string, unknown>,
-  ) {
+  constructor(status: StatusCodes, message: string, details?: T) {
     super(message);
     this.status = status;
     this.details = details;

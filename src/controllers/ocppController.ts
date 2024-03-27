@@ -3,6 +3,7 @@ import WebSocketController from 'controllers/webSocketController';
 import type { NextFunction, Request, Response } from 'express';
 import { IncomingMessage } from 'http';
 import OcppClientService from 'services/ocppClientService';
+import OcppServerService from 'services/ocppServerService';
 import { Duplex } from 'stream';
 import {
   OCPPActions,
@@ -20,8 +21,12 @@ import { RawData, WebSocket } from 'ws';
 
 export default class OcppController extends WebSocketController {
   #ocppClientService: OcppClientService;
+  #ocppServerService: OcppServerService;
 
-  constructor(ocppClientService: OcppClientService) {
+  constructor(
+    ocppClientService: OcppClientService,
+    ocppServerService: OcppServerService,
+  ) {
     super({
       noServer: true,
       handleProtocols(protocols) {
@@ -30,6 +35,7 @@ export default class OcppController extends WebSocketController {
     });
 
     this.#ocppClientService = ocppClientService;
+    this.#ocppServerService = ocppServerService;
   }
 
   handleUpgrade(request: IncomingMessage, socket: Duplex, head: Buffer): void {
@@ -191,32 +197,15 @@ export default class OcppController extends WebSocketController {
     return client;
   }
 
-  // Helper method to handle WebSocket response from charging station
-  #wsClientResponse(ws: WebSocket): Promise<OCPPOutgoingResponse> {
-    return new Promise((resolve, reject) => {
-      ws.on('message', (data) => {
-        const message: OCPPOutgoingResponse = JSON.parse(data.toString());
-        resolve(message);
-      });
-
-      ws.on('close', () =>
-        reject(new RestError(410, 'Charging station disconnected')),
-      );
-
-      ws.on('error', (error) => {
-        reject(error);
-      });
-    });
-  }
-
   get changeAvailability() {
     return async (req: Request, res: Response, next: NextFunction) => {
       try {
         const ws = this.getClientWs(req.params.id);
 
-        ws.send(JSON.stringify(['Call', 'changeAvailability']));
-
-        const response = await this.#wsClientResponse(ws);
+        const response = await this.#ocppServerService.changeAvailability(
+          ws,
+          req.body,
+        );
         res.json(response);
       } catch (error) {
         next(error);
@@ -229,9 +218,10 @@ export default class OcppController extends WebSocketController {
       try {
         const ws = this.getClientWs(req.params.id);
 
-        ws.send(JSON.stringify(['Call', 'changeConfiguration']));
-
-        const response = await this.#wsClientResponse(ws);
+        const response = await this.#ocppServerService.changeConfiguration(
+          ws,
+          req.body,
+        );
         res.json(response);
       } catch (error) {
         next(error);
@@ -244,9 +234,7 @@ export default class OcppController extends WebSocketController {
       try {
         const ws = this.getClientWs(req.params.id);
 
-        ws.send(JSON.stringify(['Call', 'clearCache']));
-
-        const response = await this.#wsClientResponse(ws);
+        const response = await this.#ocppServerService.clearCache(ws, req.body);
         res.json(response);
       } catch (error) {
         next(error);
@@ -259,9 +247,10 @@ export default class OcppController extends WebSocketController {
       try {
         const ws = this.getClientWs(req.params.id);
 
-        ws.send(JSON.stringify(['Call', 'getConfiguration']));
-
-        const response = await this.#wsClientResponse(ws);
+        const response = await this.#ocppServerService.getConfiguration(
+          ws,
+          req.body,
+        );
         res.json(response);
       } catch (error) {
         next(error);
@@ -274,9 +263,10 @@ export default class OcppController extends WebSocketController {
       try {
         const ws = this.getClientWs(req.params.id);
 
-        ws.send(JSON.stringify(['Call', 'remoteStartTransaction']));
-
-        const response = await this.#wsClientResponse(ws);
+        const response = await this.#ocppServerService.remoteStartTransaction(
+          ws,
+          req.body,
+        );
         res.json(response);
       } catch (error) {
         next(error);
@@ -289,9 +279,10 @@ export default class OcppController extends WebSocketController {
       try {
         const ws = this.getClientWs(req.params.id);
 
-        ws.send(JSON.stringify(['Call', 'remoteStopTransaction']));
-
-        const response = await this.#wsClientResponse(ws);
+        const response = await this.#ocppServerService.remoteStopTransaction(
+          ws,
+          req.body,
+        );
         res.json(response);
       } catch (error) {
         next(error);
@@ -304,9 +295,7 @@ export default class OcppController extends WebSocketController {
       try {
         const ws = this.getClientWs(req.params.id);
 
-        ws.send(JSON.stringify(['Call', 'reset']));
-
-        const response = await this.#wsClientResponse(ws);
+        const response = await this.#ocppServerService.reset(ws, req.body);
         res.json(response);
       } catch (error) {
         next(error);
@@ -319,9 +308,10 @@ export default class OcppController extends WebSocketController {
       try {
         const ws = this.getClientWs(req.params.id);
 
-        ws.send(JSON.stringify(['Call', 'unlockConnector']));
-
-        const response = await this.#wsClientResponse(ws);
+        const response = await this.#ocppServerService.unlockConnector(
+          ws,
+          req.body,
+        );
         res.json(response);
       } catch (error) {
         next(error);

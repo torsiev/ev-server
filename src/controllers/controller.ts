@@ -5,5 +5,9 @@
 
 import OcppClientService from 'services/ocppClientService';
 import OcppController from './ocppController';
+import OcppServerService from 'services/ocppServerService';
 
-export const ocppController = new OcppController(new OcppClientService());
+export const ocppController = new OcppController(
+  new OcppClientService(),
+  new OcppServerService(),
+);
