@@ -1,15 +1,11 @@
-export type OCPPIncomingRequest = [
+export type OCPPRequest = [
   OCPPMessageType,
   string,
   OCPPActions,
   Record<string, unknown>,
 ];
 
-export type OCPPOutgoingResponse = [
-  OCPPMessageType,
-  string,
-  Record<string, unknown>,
-];
+export type OCPPResponse = [OCPPMessageType, string, Record<string, unknown>];
 
 export type OCPPErrorResponse = [
   OCPPMessageType,

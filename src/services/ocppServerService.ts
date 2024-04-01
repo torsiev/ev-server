@@ -1,10 +1,11 @@
+import { logger } from 'app/logger';
 import { randomUUID } from 'crypto';
 import {
   OCPPActions,
   OCPPErrorResponse,
-  OCPPIncomingRequest,
   OCPPMessageType,
-  OCPPOutgoingResponse,
+  OCPPRequest,
+  OCPPResponse,
 } from 'types/ocpp/ocppCommon';
 import {
   ChangeAvailabilityResponse,
@@ -37,14 +38,25 @@ import {
 } from 'validations/ocppValidation';
 import { RawData, WebSocket } from 'ws';
 
+const service = 'OCPPServerService';
+
 export default class OcppServerService {
   // Helper method to handle WebSocket response from charging station
-  #wsClientResponse(ws: WebSocket): Promise<OCPPOutgoingResponse> {
+  #wsClientResponse(ws: WebSocket): Promise<OCPPResponse> {
     return new Promise((resolve, reject) => {
       const messageHandler = (data: RawData) => {
-        const message: OCPPOutgoingResponse = JSON.parse(data.toString());
+        const message: OCPPResponse | OCPPErrorResponse = JSON.parse(
+          data.toString(),
+        );
 
-        resolve(message);
+        if (message[0] === OCPPMessageType.CALL_ERROR) {
+          logger.error(`Charging station response with error, ${message}`, {
+            service,
+          });
+          reject(new Error(`Charging station response with error, ${message}`));
+        }
+
+        resolve(message as OCPPResponse);
 
         clearListeners();
       };
@@ -68,24 +80,13 @@ export default class OcppServerService {
     });
   }
 
-  #handleOcppErr(err: unknown, client: WebSocket, resId: string) {
-    if (err instanceof OCPPError) {
-      if (client.readyState !== WebSocket.CLOSED) {
-        const msg: OCPPErrorResponse = [
-          OCPPMessageType.CALL_ERROR,
-          resId,
-          err.code,
-          err.message,
-          err.details,
-        ];
-        client.send(JSON.stringify(msg));
-      }
-
-      throw new RestError(
-        422,
-        'Cannot process response from charging station, uncompatible charging station',
-      );
-    }
+  #buildRequest(action: OCPPActions, payload: Record<string, unknown>): string {
+    return JSON.stringify([
+      OCPPMessageType.CALL,
+      randomUUID(),
+      action,
+      payload,
+    ] as OCPPRequest);
   }
 
   async changeAvailability(
@@ -102,12 +103,10 @@ export default class OcppServerService {
     }
 
     client.send(
-      JSON.stringify([
-        OCPPMessageType.CALL_RESULT,
-        randomUUID(),
+      this.#buildRequest(
         OCPPActions.CHANGE_AVAILABILITY,
         validatedPayload.data,
-      ] as OCPPIncomingRequest),
+      ),
     );
     const cpResponse = await this.#wsClientResponse(client);
 
@@ -118,7 +117,12 @@ export default class OcppServerService {
         OCPPActions.CHANGE_AVAILABILITY,
       );
     } catch (error) {
-      this.#handleOcppErr(error, client, cpResponse[1]);
+      if (error instanceof OCPPError) {
+        throw new RestError(
+          422,
+          'Cannot process response from charging station, uncompatible charging station',
+        );
+      }
 
       throw new RestError(500, 'Internal server error');
     }
@@ -139,12 +143,10 @@ export default class OcppServerService {
     }
 
     client.send(
-      JSON.stringify([
-        OCPPMessageType.CALL_RESULT,
-        randomUUID(),
+      this.#buildRequest(
         OCPPActions.CHANGE_CONFIGURATION,
         validatedPayload.data,
-      ] as OCPPIncomingRequest),
+      ),
     );
 
     const cpResponse = await this.#wsClientResponse(client);
@@ -156,7 +158,12 @@ export default class OcppServerService {
         OCPPActions.CHANGE_CONFIGURATION,
       );
     } catch (error) {
-      this.#handleOcppErr(error, client, cpResponse[1]);
+      if (error instanceof OCPPError) {
+        throw new RestError(
+          422,
+          'Cannot process response from charging station, uncompatible charging station',
+        );
+      }
 
       throw new RestError(500, 'Internal server error');
     }
@@ -177,12 +184,7 @@ export default class OcppServerService {
     }
 
     client.send(
-      JSON.stringify([
-        OCPPMessageType.CALL_RESULT,
-        randomUUID(),
-        OCPPActions.CLEAR_CACHE,
-        validatedPayload.data,
-      ] as OCPPIncomingRequest),
+      this.#buildRequest(OCPPActions.CLEAR_CACHE, validatedPayload.data),
     );
 
     const cpResponse = await this.#wsClientResponse(client);
@@ -194,7 +196,12 @@ export default class OcppServerService {
         OCPPActions.CLEAR_CACHE,
       );
     } catch (error) {
-      this.#handleOcppErr(error, client, cpResponse[1]);
+      if (error instanceof OCPPError) {
+        throw new RestError(
+          422,
+          'Cannot process response from charging station, uncompatible charging station',
+        );
+      }
 
       throw new RestError(500, 'Internal server error');
     }
@@ -215,12 +222,7 @@ export default class OcppServerService {
     }
 
     client.send(
-      JSON.stringify([
-        OCPPMessageType.CALL_RESULT,
-        randomUUID(),
-        OCPPActions.GET_CONFIGURATION,
-        validatedPayload.data,
-      ] as OCPPIncomingRequest),
+      this.#buildRequest(OCPPActions.GET_CONFIGURATION, validatedPayload.data),
     );
 
     const cpResponse = await this.#wsClientResponse(client);
@@ -232,7 +234,12 @@ export default class OcppServerService {
         OCPPActions.GET_CONFIGURATION,
       );
     } catch (error) {
-      this.#handleOcppErr(error, client, cpResponse[1]);
+      if (error instanceof OCPPError) {
+        throw new RestError(
+          422,
+          'Cannot process response from charging station, uncompatible charging station',
+        );
+      }
 
       throw new RestError(500, 'Internal server error');
     }
@@ -253,12 +260,10 @@ export default class OcppServerService {
     }
 
     client.send(
-      JSON.stringify([
-        OCPPMessageType.CALL_RESULT,
-        randomUUID(),
+      this.#buildRequest(
         OCPPActions.REMOTE_START_TRANSACTION,
         validatedPayload.data,
-      ] as OCPPIncomingRequest),
+      ),
     );
 
     const cpResponse = await this.#wsClientResponse(client);
@@ -270,7 +275,12 @@ export default class OcppServerService {
         OCPPActions.REMOTE_START_TRANSACTION,
       );
     } catch (error) {
-      this.#handleOcppErr(error, client, cpResponse[1]);
+      if (error instanceof OCPPError) {
+        throw new RestError(
+          422,
+          'Cannot process response from charging station, uncompatible charging station',
+        );
+      }
 
       throw new RestError(500, 'Internal server error');
     }
@@ -291,12 +301,10 @@ export default class OcppServerService {
     }
 
     client.send(
-      JSON.stringify([
-        OCPPMessageType.CALL_RESULT,
-        randomUUID(),
+      this.#buildRequest(
         OCPPActions.REMOTE_STOP_TRANSACTION,
         validatedPayload.data,
-      ] as OCPPIncomingRequest),
+      ),
     );
 
     const cpResponse = await this.#wsClientResponse(client);
@@ -308,7 +316,12 @@ export default class OcppServerService {
         OCPPActions.REMOTE_STOP_TRANSACTION,
       );
     } catch (error) {
-      this.#handleOcppErr(error, client, cpResponse[1]);
+      if (error instanceof OCPPError) {
+        throw new RestError(
+          422,
+          'Cannot process response from charging station, uncompatible charging station',
+        );
+      }
 
       throw new RestError(500, 'Internal server error');
     }
@@ -328,21 +341,19 @@ export default class OcppServerService {
       );
     }
 
-    client.send(
-      JSON.stringify([
-        OCPPMessageType.CALL_RESULT,
-        randomUUID(),
-        OCPPActions.RESET,
-        validatedPayload.data,
-      ] as OCPPIncomingRequest),
-    );
+    client.send(this.#buildRequest(OCPPActions.RESET, validatedPayload.data));
 
     const cpResponse = await this.#wsClientResponse(client);
 
     try {
       return validateOCPP(resetResSchema, cpResponse[2], OCPPActions.RESET);
     } catch (error) {
-      this.#handleOcppErr(error, client, cpResponse[1]);
+      if (error instanceof OCPPError) {
+        throw new RestError(
+          422,
+          'Cannot process response from charging station, uncompatible charging station',
+        );
+      }
 
       throw new RestError(500, 'Internal server error');
     }
@@ -363,12 +374,7 @@ export default class OcppServerService {
     }
 
     client.send(
-      JSON.stringify([
-        OCPPMessageType.CALL_RESULT,
-        randomUUID(),
-        OCPPActions.UNLOCK_CONNECTOR,
-        validatedPayload.data,
-      ] as OCPPIncomingRequest),
+      this.#buildRequest(OCPPActions.UNLOCK_CONNECTOR, validatedPayload.data),
     );
 
     const cpResponse = await this.#wsClientResponse(client);
@@ -380,7 +386,12 @@ export default class OcppServerService {
         OCPPActions.UNLOCK_CONNECTOR,
       );
     } catch (error) {
-      this.#handleOcppErr(error, client, cpResponse[1]);
+      if (error instanceof OCPPError) {
+        throw new RestError(
+          422,
+          'Cannot process response from charging station, uncompatible charging station',
+        );
+      }
 
       throw new RestError(500, 'Internal server error');
     }

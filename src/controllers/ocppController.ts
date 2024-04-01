@@ -9,9 +9,9 @@ import {
   OCPPActions,
   OCPPErrorResponse,
   OCPPErrorType,
-  OCPPIncomingRequest,
+  OCPPRequest,
   OCPPMessageType,
-  OCPPOutgoingResponse,
+  OCPPResponse,
 } from 'types/ocpp/ocppCommon';
 import { WssProtocol } from 'types/server';
 import { OCPPError, logOCPPError, urlToClientId } from 'utils/ocppUtil';
@@ -19,7 +19,7 @@ import { RestError } from 'utils/restError';
 import { abortHandshake } from 'utils/wsUtil';
 import { RawData, WebSocket } from 'ws';
 
-export default class OcppController extends WebSocketController {
+export default class OcppController extends WebSocketController<WebSocket> {
   #ocppClientService: OcppClientService;
   #ocppServerService: OcppServerService;
 
@@ -59,20 +59,26 @@ export default class OcppController extends WebSocketController {
     request: IncomingMessage,
     data: RawData,
   ) {
-    let message: OCPPIncomingRequest | OCPPOutgoingResponse;
+    let message: OCPPRequest | OCPPResponse;
     try {
       message = JSON.parse(data.toString());
       let responseData: Record<string, unknown> | undefined = undefined;
 
+      // Check if message is outgoing response from charging station
+      // This will be handled by the ocppServerService
+      if (
+        message[0] === OCPPMessageType.CALL_RESULT ||
+        message[0] === OCPPMessageType.CALL_ERROR
+      )
+        return;
+
+      // Check if message is incoming request from charging station
       if (message[0] !== OCPPMessageType.CALL) {
         throw new OCPPError(
           OCPPErrorType.FORMATION_VIOLATION,
           'Payload for Action is syntactically incorrect',
         );
       }
-
-      // Check if message is outgoing response from charging station
-      if (message.length === 3) return;
 
       const action = message[2];
       switch (action) {
@@ -118,7 +124,7 @@ export default class OcppController extends WebSocketController {
       }
       // Send response to client
       if (responseData) {
-        const res: OCPPOutgoingResponse = [
+        const res: OCPPResponse = [
           OCPPMessageType.CALL_RESULT,
           message[1],
           responseData,

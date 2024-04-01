@@ -2,10 +2,10 @@ import { IncomingMessage } from 'http';
 import internal from 'stream';
 import { RawData, ServerOptions, WebSocketServer, WebSocket } from 'ws';
 
-export default abstract class WebSocketController {
+export default abstract class WebSocketController<T> {
   readonly className = this.constructor.name;
   #wss: WebSocketServer;
-  #clients = new Map<string, WebSocket>();
+  #clients = new Map<string, T>();
 
   constructor(options?: ServerOptions) {
     this.#wss = new WebSocketServer(options);
@@ -26,12 +26,12 @@ export default abstract class WebSocketController {
     return this.#wss;
   }
 
-  get clients(): Map<string, WebSocket> {
+  get clients(): Map<string, T> {
     return this.#clients;
   }
 
-  addClient(id: string, ws: WebSocket) {
-    this.#clients.set(id, ws);
+  addClient(id: string, value: T) {
+    this.#clients.set(id, value);
   }
 
   removeClient(id: string) {
