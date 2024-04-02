@@ -211,7 +211,7 @@ export const stopTransactionSchema = z
   .merge(authorizeSchema.partial());
 
 // -----------------------------------------------------
-// Define OCPP client payload validation schema
+// Define OCPP Server payload validation schema
 // -----------------------------------------------------
 
 export const cancelReservationReqSchema = z.object({
