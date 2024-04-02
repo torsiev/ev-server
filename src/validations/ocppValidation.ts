@@ -123,8 +123,8 @@ export const firmwareStatusNotifSchema = z.object({
 export const heartbeatSchema = z.object({});
 
 export const meterValuesSchema = z.object({
-  connectorId: z.number(),
-  transactionId: z.number().optional(),
+  connectorId: z.number().int().nonnegative(),
+  transactionId: z.number().int().nonnegative().optional(),
   meterValue: z.array(
     z.object({
       timestamp: z.coerce.date(),
@@ -135,15 +135,15 @@ export const meterValuesSchema = z.object({
 
 export const startTransactionSchema = z
   .object({
-    connectorId: z.number(),
-    meterStart: z.number(),
-    reservationId: z.number().optional(),
+    connectorId: z.number().int().nonnegative(),
+    meterStart: z.number().int().nonnegative(),
+    reservationId: z.number().int().nonnegative().optional(),
     timestamp: z.coerce.date(),
   })
   .merge(authorizeSchema);
 
 export const statusNotifSchema = z.object({
-  connectorId: z.number(),
+  connectorId: z.number().int().nonnegative(),
   errorCode: z.enum([
     'ConnectorLockFailure',
     'EVCommunicationError',
@@ -181,9 +181,9 @@ export const statusNotifSchema = z.object({
 
 export const stopTransactionSchema = z
   .object({
-    meterStop: z.number(),
+    meterStop: z.number().int().nonnegative(),
     timestamp: z.coerce.date(),
-    transactionId: z.number(),
+    transactionId: z.number().int().nonnegative(),
     reason: z
       .enum([
         'EmergencyStop',
@@ -215,7 +215,7 @@ export const stopTransactionSchema = z
 // -----------------------------------------------------
 
 export const cancelReservationReqSchema = z.object({
-  reservationId: z.number(),
+  reservationId: z.number().int().nonnegative(),
 });
 
 export const cancelReservationResSchema = z.object({
@@ -223,7 +223,7 @@ export const cancelReservationResSchema = z.object({
 });
 
 export const changeAvailabilityReqSchema = z.object({
-  connectorId: z.number(),
+  connectorId: z.number().int().nonnegative(),
   type: z.enum(['Inoperative', 'Operative']),
 });
 
@@ -248,8 +248,8 @@ export const clearCacheResSchema = z.object({
 
 export const clearChargingProfileReqSchema = z
   .object({
-    id: z.number(),
-    connectorId: z.number(),
+    id: z.number().int().nonnegative(),
+    connectorId: z.number().int().nonnegative(),
     chargingProfilePurpose: z.enum([
       'ChargePointMaxProfile',
       'TxDefaultProfile',
@@ -279,25 +279,25 @@ export const dataTransferResSchema = z.object({
 });
 
 export const getCompositeScheduleReqSchema = z.object({
-  connectorId: z.number(),
-  duration: z.number(),
+  connectorId: z.number().int().nonnegative(),
+  duration: z.number().int().nonnegative(),
   chargingRateUnit: z.enum(['A', 'W']).optional(),
 });
 
 export const getCompositeScheduleResSchema = z.object({
   status: z.enum(['Accepted', 'Rejected']),
-  connectorId: z.number().optional(),
+  connectorId: z.number().int().nonnegative().optional(),
   scheduleStart: z.coerce.date().optional(),
   chargingSchedule: z
     .object({
-      duration: z.number().optional(),
+      duration: z.number().int().nonnegative().optional(),
       startSchedule: z.coerce.date().optional(),
       chargingRateUnit: z.enum(['A', 'W']),
       chargingSchedulePeriod: z.array(
         z.object({
-          startPeriod: z.number(),
+          startPeriod: z.number().int().nonnegative(),
           limit: z.number().multipleOf(0.1),
-          numberPhases: z.number().optional(),
+          numberPhases: z.number().int().nonnegative().optional(),
         }),
       ),
     })
@@ -325,8 +325,8 @@ export const getConfigResSchema = z
 
 export const getDiagnosticsReqSchema = z.object({
   location: z.string(),
-  retries: z.number().optional(),
-  retryInterval: z.number().optional(),
+  retries: z.number().int().nonnegative().optional(),
+  retryInterval: z.number().int().nonnegative().optional(),
   startTime: z.coerce.date().optional(),
   stoptTime: z.coerce.date().optional(),
 });
@@ -340,17 +340,17 @@ export const getDiagnosticsResSchema = z
 export const getLocalListVersionReqSchema = z.object({});
 
 export const getLocalListVersionResSchema = z.object({
-  listVersion: z.number(),
+  listVersion: z.number().int().nonnegative(),
 });
 
 export const remoteStartTransactionReqSchema = z.object({
-  connectorId: z.number().optional(),
+  connectorId: z.number().int().nonnegative().optional(),
   idTag: z.string().min(1).max(20),
   chargingProfile: z
     .object({
-      chargingProfileId: z.number(),
-      transactionId: z.number().optional(),
-      stackLevel: z.number(),
+      chargingProfileId: z.number().int().nonnegative(),
+      transactionId: z.number().int().nonnegative().optional(),
+      stackLevel: z.number().int().nonnegative(),
       chargingProfilePurpose: z.enum([
         'ChargePointMaxProfile',
         'TxDefaultProfile',
@@ -361,14 +361,14 @@ export const remoteStartTransactionReqSchema = z.object({
       validFrom: z.coerce.date().optional(),
       validTo: z.coerce.date().optional(),
       chargingSchedule: z.object({
-        duration: z.number().optional(),
+        duration: z.number().int().nonnegative().optional(),
         startShedule: z.coerce.date().optional(),
         chargingRateUnit: z.enum(['A', 'W']),
         chargingSchedulePeriod: z.array(
           z.object({
-            startPeriod: z.number(),
+            startPeriod: z.number().int().nonnegative(),
             limit: z.number().multipleOf(0.1),
-            numberPhase: z.number().optional(),
+            numberPhase: z.number().int().nonnegative().optional(),
           }),
         ),
         minChargingRate: z.number().multipleOf(0.1),
@@ -382,7 +382,7 @@ export const remoteStartTransactionResSchema = z.object({
 });
 
 export const remoteStopTransactionReqSchema = z.object({
-  transactionId: z.number(),
+  transactionId: z.number().int().nonnegative(),
 });
 
 export const remoteStopTransactionResSchema = z.object({
@@ -390,11 +390,11 @@ export const remoteStopTransactionResSchema = z.object({
 });
 
 export const reserveNowReqSchema = z.object({
-  connectorId: z.number(),
+  connectorId: z.number().int().nonnegative(),
   expiryDate: z.coerce.date(),
   idTag: z.string().min(1).max(20),
   parentIdTag: z.string().min(1).max(20).optional(),
-  reservationId: z.number(),
+  reservationId: z.number().int().nonnegative(),
 });
 
 export const reserveNowResSchema = z.object({
@@ -416,7 +416,7 @@ export const resetResSchema = z.object({
 });
 
 export const sendLocalListReqSchema = z.object({
-  listVersion: z.number(),
+  listVersion: z.number().int().nonnegative(),
   localAuthorizationList: z
     .array(
       z.object({
@@ -445,11 +445,11 @@ export const sendLocalListResSchema = z.object({
 });
 
 export const setChargingProfileReqSchema = z.object({
-  connectionId: z.number(),
+  connectionId: z.number().int().nonnegative(),
   csChargingProfiles: z.object({
-    chargingProfileId: z.number(),
-    transcationId: z.number().optional(),
-    stackLevel: z.number(),
+    chargingProfileId: z.number().int().nonnegative(),
+    transcationId: z.number().int().nonnegative().optional(),
+    stackLevel: z.number().int().nonnegative(),
     chargingProfilePurpose: z.enum([
       'ChargePointMaxProfile',
       'TxDefaultProfile',
@@ -460,14 +460,14 @@ export const setChargingProfileReqSchema = z.object({
     validFrom: z.coerce.date().optional(),
     validTo: z.coerce.date().optional(),
     chargingSchedule: z.object({
-      duration: z.number().optional(),
+      duration: z.number().int().nonnegative().optional(),
       startSchedule: z.coerce.date().optional(),
       chargingRateUnit: z.enum(['A', 'W']),
       chargingSchedulePeriod: z.array(
         z.object({
-          startPeriod: z.number(),
+          startPeriod: z.number().int().nonnegative(),
           limit: z.number().multipleOf(0.1),
-          numberPhases: z.number().optional(),
+          numberPhases: z.number().int().nonnegative().optional(),
         }),
       ),
       minChargingRate: z.number().multipleOf(0.1).optional(),
@@ -488,7 +488,7 @@ export const triggerMessageReqSchema = z.object({
     'MeterValues',
     'StatusNotification',
   ]),
-  connectorId: z.number().optional(),
+  connectorId: z.number().int().nonnegative().optional(),
 });
 
 export const triggerMessageResSchema = z.object({
@@ -496,7 +496,7 @@ export const triggerMessageResSchema = z.object({
 });
 
 export const unlockConnectorReqSchema = z.object({
-  connectorId: z.number(),
+  connectorId: z.number().int().nonnegative(),
 });
 
 export const unlockConnectorResSchema = z.object({
@@ -505,9 +505,9 @@ export const unlockConnectorResSchema = z.object({
 
 export const updateFirmwareReqSchema = z.object({
   location: z.string(),
-  retries: z.number().optional(),
+  retries: z.number().int().nonnegative().optional(),
   retrieveData: z.coerce.date(),
-  retrieveInterval: z.number().optional(),
+  retrieveInterval: z.number().int().nonnegative().optional(),
 });
 
 export const updateFirmwareResSchema = z.object({});
