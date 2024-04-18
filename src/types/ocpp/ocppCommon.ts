@@ -173,3 +173,11 @@ export enum OCPPAvailabilityType {
   INOPERATIVE = 'Inoperative',
   OPERATIVE = 'Operative',
 }
+
+export const OCPP_EVENT_ACTOR = {
+  STATION: 'station',
+  MANUAL: 'manual',
+} as const;
+
+export type OCPPEventActor =
+  (typeof OCPP_EVENT_ACTOR)[keyof typeof OCPP_EVENT_ACTOR];
