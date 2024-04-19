@@ -1,0 +1,13 @@
+{
+  "version": "5",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1713429967596,
+      "tag": "0000_overjoyed_the_twelve",
+      "breakpoints": true
+    }
+  ]
+}

@@ -13,10 +13,9 @@
     "lint": "eslint src",
     "format": "npx prettier --write src",
     "clean": "rimraf ./dist",
-    "db:generate": "drizzle-kit generate:mysql",
-    "db:push": "drizzle-kit push:mysql",
-    "db:migrate": "tsx src/db/migration.ts",
-    "db:drop": "drizzle-kit drop"
+    "sql:generate": "drizzle-kit generate:mysql",
+    "sql:drop": "drizzle-kit drop",
+    "db": "tsx src/db/dbCli.ts"
   },
   "keywords": [],
   "author": "",
@@ -43,6 +42,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "arg": "^5.0.2",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.30.8",
     "express": "^4.18.2",
