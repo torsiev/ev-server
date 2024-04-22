@@ -5,6 +5,7 @@ import { drizzle } from 'drizzle-orm/mysql2';
 import { migrate } from 'drizzle-orm/mysql2/migrator';
 import mysql from 'mysql2/promise';
 import { APP_ENV } from 'types/common';
+import seed from './seed';
 
 (async () => {
   try {
@@ -14,6 +15,7 @@ import { APP_ENV } from 'types/common';
       '--migrate': Boolean,
       '--drop': Boolean,
       '--fresh': Boolean,
+      '--seed': Boolean,
 
       // Aliases
       '-h': '--help',
@@ -21,13 +23,7 @@ import { APP_ENV } from 'types/common';
     });
 
     // Default action when no arguments are passed
-    if (
-      !args['--create'] &&
-      !args['--migrate'] &&
-      !args['--drop'] &&
-      !args['--help'] &&
-      !args['--fresh']
-    ) {
+    if (Object.keys(args).length === 1) {
       await createDb();
       await migrateDb();
       process.exit(0);
@@ -58,6 +54,10 @@ import { APP_ENV } from 'types/common';
 
     if (args['--migrate']) {
       await migrateDb();
+    }
+
+    if (args['--seed']) {
+      await seedDb();
     }
 
     if (args['--drop']) {
@@ -125,4 +125,15 @@ async function dropDb() {
   logger.info(`Database ${dbName} dropped`, {
     service: 'DB CLI',
   });
+}
+
+async function seedDb() {
+  logger.info('Seeding database', { service: 'DB CLI' });
+  await using mysql = await getConn();
+  await mysql.connection.query(`USE ${process.env['DB_NAME']}`);
+  const db = drizzle(mysql.connection);
+
+  await seed(db);
+
+  logger.info('Seeding complete', { service: 'DB CLI' });
 }
