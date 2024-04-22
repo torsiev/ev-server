@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
-    "build": "pnpm run clean && tsc",
+    "build": "pnpm run clean && tsc && tsc-alias",
     "start": "node ./dist/src",
     "dev": "tsx src",
     "dev:watch": "tsx watch src",
@@ -15,7 +15,8 @@
     "clean": "rimraf ./dist",
     "sql:generate": "drizzle-kit generate:mysql",
     "sql:drop": "drizzle-kit drop",
-    "db": "tsx src/db/dbCli.ts"
+    "db": "tsx src/db/dbCli.ts",
+    "db:node": "node ./dist/src/db/dbCli.js"
   },
   "keywords": [],
   "author": "",
@@ -38,6 +39,7 @@
     "rimraf": "^5.0.5",
     "supertest": "^6.3.4",
     "ts-jest": "^29.1.2",
+    "tsc-alias": "^1.8.8",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3"
   },
