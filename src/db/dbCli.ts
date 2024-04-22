@@ -36,7 +36,9 @@ import seed from './seed';
           '-h, --help\t\tShow help\n' +
           '--create\t\tCreate database\n' +
           '-m, --migrate\t\tMigrate database\n' +
-          '--drop\t\t\tDrop database\n',
+          '--drop\t\t\tDrop database\n' +
+          '--fresh\t\t\tDrop and recreate database\n' +
+          '--seed\t\t\tSeed database\n',
       );
       process.exit(0);
     }
