@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "2b3b594c-f088-4ff0-86a6-45b01e01e637",
+  "id": "ea00cf28-717d-4038-83b6-683f6ddcc66d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "addresses": {
@@ -114,6 +114,20 @@
           "notNull": false,
           "autoincrement": false
         },
+        "firmware_update_status": {
+          "name": "firmware_update_status",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "firwmare_update_timestamp": {
+          "name": "firwmare_update_timestamp",
+          "type": "timestamp(6)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "iccid": {
           "name": "iccid",
           "type": "varchar(255)",
@@ -144,6 +158,20 @@
         },
         "last_heartbeat": {
           "name": "last_heartbeat",
+          "type": "timestamp(6)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "diagnostics_status": {
+          "name": "diagnostics_status",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "diagnostics_timestamp": {
+          "name": "diagnostics_timestamp",
           "type": "timestamp(6)",
           "primaryKey": false,
           "notNull": false,
@@ -325,6 +353,13 @@
           "type": "int unsigned",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": true
+        },
+        "connector_pk": {
+          "name": "connector_pk",
+          "type": "int unsigned",
+          "primaryKey": false,
+          "notNull": true,
           "autoincrement": false
         },
         "status": {
@@ -372,12 +407,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "connector_statuses_id_connectors_id_fk": {
-          "name": "connector_statuses_id_connectors_id_fk",
+        "connector_statuses_connector_pk_connectors_id_fk": {
+          "name": "connector_statuses_connector_pk_connectors_id_fk",
           "tableFrom": "connector_statuses",
           "tableTo": "connectors",
           "columnsFrom": [
-            "id"
+            "connector_pk"
           ],
           "columnsTo": [
             "id"

@@ -16,11 +16,15 @@ CREATE TABLE `chargeboxes` (
 	`charge_point_serial_number` varchar(255),
 	`charge_box_serial_number` varchar(255),
 	`firmware_version` varchar(255),
+	`firmware_update_status` varchar(255),
+	`firwmare_update_timestamp` timestamp(6),
 	`iccid` varchar(255),
 	`imsi` varchar(255),
 	`meter_type` varchar(255),
 	`meter_serial_number` varchar(255),
 	`last_heartbeat` timestamp(6),
+	`diagnostics_status` varchar(255),
+	`diagnostics_timestamp` timestamp(6),
 	`address_id` int unsigned,
 	`location_latitude` decimal(11,8),
 	`location_longitude` decimal(11,8),
@@ -43,7 +47,8 @@ CREATE TABLE `meter_values` (
 );
 --> statement-breakpoint
 CREATE TABLE `connector_statuses` (
-	`id` int unsigned NOT NULL,
+	`id` int unsigned AUTO_INCREMENT NOT NULL,
+	`connector_pk` int unsigned NOT NULL,
 	`status` varchar(255),
 	`status_timestamp` timestamp(6),
 	`error_code` varchar(255),
@@ -104,7 +109,7 @@ CREATE TABLE `users` (
 ALTER TABLE `chargeboxes` ADD CONSTRAINT `chargeboxes_address_id_addresses_id_fk` FOREIGN KEY (`address_id`) REFERENCES `addresses`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `meter_values` ADD CONSTRAINT `meter_values_connector_pk_connectors_id_fk` FOREIGN KEY (`connector_pk`) REFERENCES `connectors`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `meter_values` ADD CONSTRAINT `meter_values_transaction_id_transaction_starts_transaction_id_fk` FOREIGN KEY (`transaction_id`) REFERENCES `transaction_starts`(`transaction_id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `connector_statuses` ADD CONSTRAINT `connector_statuses_id_connectors_id_fk` FOREIGN KEY (`id`) REFERENCES `connectors`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `connector_statuses` ADD CONSTRAINT `connector_statuses_connector_pk_connectors_id_fk` FOREIGN KEY (`connector_pk`) REFERENCES `connectors`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `connectors` ADD CONSTRAINT `connectors_chargebox_id_chargeboxes_id_fk` FOREIGN KEY (`chargebox_id`) REFERENCES `chargeboxes`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `ocpp_tags` ADD CONSTRAINT `ocpp_tags_parent_id_tag_ocpp_tags_id_tag_fk` FOREIGN KEY (`parent_id_tag`) REFERENCES `ocpp_tags`(`id_tag`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `transaction_starts` ADD CONSTRAINT `transaction_starts_connector_pk_connectors_id_fk` FOREIGN KEY (`connector_pk`) REFERENCES `connectors`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint

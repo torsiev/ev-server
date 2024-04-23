@@ -20,11 +20,21 @@ export const chargeboxes = mysqlTable('chargeboxes', {
   }),
   chargeBoxSerialNumber: varchar('charge_box_serial_number', { length: 255 }),
   firmwareVersion: varchar('firmware_version', { length: 255 }),
+  firmwareUpdateStatus: varchar('firmware_update_status', { length: 255 }),
+  firmwareUpdateTimestamp: timestamp('firwmare_update_timestamp', {
+    mode: 'date',
+    fsp: 6,
+  }),
   iccid: varchar('iccid', { length: 255 }),
   imsi: varchar('imsi', { length: 255 }),
   meterType: varchar('meter_type', { length: 255 }),
   meterSerialNumber: varchar('meter_serial_number', { length: 255 }),
   lastHeartbeat: timestamp('last_heartbeat', { mode: 'date', fsp: 6 }),
+  diagnosticsStatus: varchar('diagnostics_status', { length: 255 }),
+  diagnosticsTimestamp: timestamp('diagnostics_timestamp', {
+    mode: 'date',
+    fsp: 6,
+  }),
   addressId: int('address_id', { unsigned: true }).references(
     () => addresses.id,
   ),

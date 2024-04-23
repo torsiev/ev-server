@@ -3,9 +3,10 @@ import { connectors } from './connectors';
 import { relations } from 'drizzle-orm';
 
 export const connectorStatuses = mysqlTable('connector_statuses', {
-  id: int('id', { unsigned: true })
-    .primaryKey()
-    .references(() => connectors.id),
+  id: int('id', { unsigned: true }).autoincrement().primaryKey(),
+  connectorPk: int('connector_pk', { unsigned: true })
+    .references(() => connectors.id)
+    .notNull(),
   status: varchar('status', { length: 255 }),
   statusTimestamp: timestamp('status_timestamp', { mode: 'date', fsp: 6 }),
   errorCode: varchar('error_code', { length: 255 }),
