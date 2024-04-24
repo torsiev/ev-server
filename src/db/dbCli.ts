@@ -44,13 +44,18 @@ import seed from './seed';
     }
 
     if (args['--fresh']) {
+      // Ignore other flags if --fresh is passed
+      args['--create'] = false;
+      args['--migrate'] = false;
+      args['--drop'] = false;
+
       await dropDb();
       await createDb();
       await migrateDb();
-      process.exit(0);
     }
 
     if (args['--create']) {
+      logger.debug('buat db lagi', { service: 'DB CLI' });
       await createDb();
     }
 
