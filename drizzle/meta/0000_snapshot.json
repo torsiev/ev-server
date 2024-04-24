@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "ea00cf28-717d-4038-83b6-683f6ddcc66d",
+  "id": "fd01bc2f-7611-42f9-9209-e8c4558728f7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "addresses": {
@@ -635,14 +635,6 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
-        },
-        "event_timestamp": {
-          "name": "event_timestamp",
-          "type": "timestamp(6)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP(6)"
         },
         "event_actor": {
           "name": "event_actor",

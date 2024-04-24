@@ -85,7 +85,6 @@ CREATE TABLE `transaction_starts` (
 --> statement-breakpoint
 CREATE TABLE `transaction_stops` (
 	`transaction_id` int unsigned NOT NULL,
-	`event_timestamp` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
 	`event_actor` enum('manual','station'),
 	`stop_timestamp` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
 	`meter_stop` int unsigned NOT NULL,

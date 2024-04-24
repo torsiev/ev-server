@@ -15,9 +15,6 @@ export const transactionStops = mysqlTable(
   'transaction_stops',
   {
     transactionId: int('transaction_id', { unsigned: true }).primaryKey(),
-    eventTimestamp: timestamp('event_timestamp', { mode: 'date', fsp: 6 })
-      .default(sql`CURRENT_TIMESTAMP(6)`)
-      .notNull(),
     eventActor: mysqlEnum('event_actor', [
       OCPP_EVENT_ACTOR.MANUAL,
       OCPP_EVENT_ACTOR.STATION,
