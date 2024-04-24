@@ -3,7 +3,7 @@ import z from 'zod';
 // --------------------------------------
 // Defines OCPP client request payload validation schema
 // --------------------------------------
-const sampledValueSchema = z.object({
+export const sampledValueSchema = z.object({
   value: z.string().min(1),
   context: z
     .enum([

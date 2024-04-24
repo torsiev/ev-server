@@ -9,8 +9,8 @@ import {
   OCPPActions,
   OCPPErrorResponse,
   OCPPErrorType,
-  OCPPRequest,
   OCPPMessageType,
+  OCPPRequest,
   OCPPResponse,
 } from 'types/ocpp/ocppCommon';
 import { WssProtocol } from 'types/server';
@@ -81,41 +81,87 @@ export default class OcppController extends WebSocketController<WebSocket> {
       }
 
       const action = message[2];
+      const clientId = urlToClientId(request.url);
       switch (action) {
-        case OCPPActions.AUTHORIZE:
-          responseData = this.#ocppClientService.authorize(message[3]);
+        case OCPPActions.AUTHORIZE: {
+          const response = await this.#ocppClientService.authorize(
+            clientId,
+            message[3],
+          );
+          ws.send(this.#buildResponse(message[1], response));
           break;
-        case OCPPActions.BOOT_NOTIFICATION:
-          responseData = this.#ocppClientService.bootNotification(message[3]);
+        }
+        case OCPPActions.BOOT_NOTIFICATION: {
+          const bootNotifRes = await this.#ocppClientService.bootNotification(
+            clientId,
+            message[3],
+          );
+          const response = this.#buildResponse(message[1], bootNotifRes);
+          if (bootNotifRes.status === 'Rejected') {
+            ws.send(response);
+            ws.close(1011);
+          }
+          ws.send(response);
           break;
-        case OCPPActions.DATA_TRANSFER:
-          responseData = this.#ocppClientService.dataTransfer(message[3]);
+        }
+        case OCPPActions.DATA_TRANSFER: {
+          const response = this.#ocppClientService.dataTransfer(
+            clientId,
+            message[3],
+          );
+          ws.send(this.#buildResponse(message[1], response));
           break;
+        }
         case OCPPActions.DIAGNOSTICS_STATUS_NOTIF:
           responseData = this.#ocppClientService.diagnosticsStatusNotif(
+            clientId,
             message[3],
           );
           break;
         case OCPPActions.FIRMWARE_STATUS_NOTIF:
           responseData = this.#ocppClientService.firmwareStatusNotif(
+            clientId,
             message[3],
           );
           break;
         case OCPPActions.HEARTBEAT:
-          responseData = this.#ocppClientService.heartbeat(message[3]);
+          responseData = this.#ocppClientService.heartbeat(
+            clientId,
+            message[3],
+          );
           break;
-        case OCPPActions.METER_VALUES:
-          responseData = this.#ocppClientService.meterValues(message[3]);
+        case OCPPActions.METER_VALUES: {
+          const response = await this.#ocppClientService.meterValues(
+            clientId,
+            message[3],
+          );
+          ws.send(this.#buildResponse(message[1], response));
           break;
-        case OCPPActions.START_TRANSACTION:
-          responseData = this.#ocppClientService.startTransaction(message[3]);
+        }
+        case OCPPActions.START_TRANSACTION: {
+          const response = await this.#ocppClientService.startTransaction(
+            clientId,
+            message[3],
+          );
+          ws.send(this.#buildResponse(message[1], response));
           break;
-        case OCPPActions.STATUS_NOTIFICATION:
-          responseData = this.#ocppClientService.statusNotif(message[3]);
+        }
+        case OCPPActions.STATUS_NOTIFICATION: {
+          const response = await this.#ocppClientService.statusNotif(
+            clientId,
+            message[3],
+          );
+          ws.send(this.#buildResponse(message[1], response));
           break;
-        case OCPPActions.STOP_TRANSACTION:
-          responseData = this.#ocppClientService.stopTransaction(message[3]);
+        }
+        case OCPPActions.STOP_TRANSACTION: {
+          const response = await this.#ocppClientService.stopTransaction(
+            clientId,
+            message[3],
+          );
+          ws.send(this.#buildResponse(message[1], response));
           break;
+        }
         default:
           throw new OCPPError(
             OCPPErrorType.NOT_IMPLEMENTED,
@@ -185,6 +231,10 @@ export default class OcppController extends WebSocketController<WebSocket> {
         service: this.className,
       },
     );
+  }
+
+  #buildResponse(messageId: string, payload: Record<string, unknown>): string {
+    return JSON.stringify([OCPPMessageType.CALL_RESULT, messageId, payload]);
   }
 
   get getClientsId() {

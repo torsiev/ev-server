@@ -1,13 +1,10 @@
-import { IncomingMessage } from 'http';
-import internal from 'stream';
 import { logger } from 'app/logger';
-import { ocppController } from 'controllers/controller';
-import { WssRoute } from 'types/server';
+import { IncomingMessage } from 'http';
+import { wsMiddleware } from 'middlewares/wsMiddleware';
+import internal from 'stream';
 import { abortHandshake } from 'utils/wsUtil';
 
 const service = 'wsRouteHandler';
-
-const ocppRoute = new RegExp(`^${WssRoute.OCPP16}/(?:([^/]+?))$`);
 
 export default async function wsRouteHandler(
   request: IncomingMessage,
@@ -15,13 +12,7 @@ export default async function wsRouteHandler(
   head: Buffer,
 ) {
   try {
-    const url = request.url ?? '';
-
-    if (ocppRoute.test(url)) {
-      ocppController.handleUpgrade(request, socket, head);
-    } else {
-      abortHandshake(socket, 404);
-    }
+    wsMiddleware(request, socket, head);
   } catch (error) {
     abortHandshake(socket, 500);
     logger.error(error as string, { service });

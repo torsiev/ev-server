@@ -1,3 +1,6 @@
+import { sampledValueSchema } from 'validations/ocppValidation';
+import z from 'zod';
+
 export type OCPPRequest = [
   OCPPMessageType,
   string,
@@ -181,3 +184,10 @@ export const OCPP_EVENT_ACTOR = {
 
 export type OCPPEventActor =
   (typeof OCPP_EVENT_ACTOR)[keyof typeof OCPP_EVENT_ACTOR];
+
+export type SampledValue = z.infer<typeof sampledValueSchema>;
+
+export type MeterValue = {
+  timestamp: Date;
+  sampledValue: SampledValue[];
+};
