@@ -24,6 +24,7 @@ import {
   StopTransactionResponse,
 } from 'types/ocpp/ocppClient';
 import { MeterValue, OCPPActions, OCPPErrorType } from 'types/ocpp/ocppCommon';
+import { WssProtocol } from 'types/server';
 import { logOCPPError, validateOCPP } from 'utils/ocppUtil';
 import {
   authorizeSchema,
@@ -70,19 +71,20 @@ export default class OcppClientService {
             status: 'Invalid',
           },
         };
-      } else if (!ocppTag.expiredDate) {
-        if (ocppTag.expiredDate!.getTime() < Date.now()) {
-          logger.info(`RFID card ${ocppTag.idTag} is expired`, {
-            service,
-          });
-          return {
-            idTagInfo: {
-              status: 'Expired',
-              expiryDate: ocppTag.expiredDate ?? undefined,
-              parentIdTag: ocppTag.parentIdTag ?? undefined,
-            },
-          };
-        }
+      } else if (
+        ocppTag.expiredDate !== null &&
+        ocppTag.expiredDate.getTime() < Date.now()
+      ) {
+        logger.info(`RFID card ${ocppTag.idTag} is expired`, {
+          service,
+        });
+        return {
+          idTagInfo: {
+            status: 'Expired',
+            expiryDate: ocppTag.expiredDate ?? undefined,
+            parentIdTag: ocppTag.parentIdTag ?? undefined,
+          },
+        };
       }
 
       logger.info(
@@ -149,6 +151,7 @@ export default class OcppClientService {
       await db
         .update(chargeboxes)
         .set({
+          ocppProtocol: WssProtocol.OCPP16,
           chargePointVendor,
           chargePointModel,
           chargePointSerialNumber,
@@ -281,25 +284,23 @@ export default class OcppClientService {
     );
 
     try {
-      const connector = await db
-        .select({ id: connectors.id })
-        .from(connectors)
-        .rightJoin(chargeboxes, eq(connectors.chargeboxId, chargeboxes.id))
-        .where(
-          and(
-            eq(connectors.connectorId, validated.connectorId),
-            eq(chargeboxes.identifier, clientId),
-          ),
-        );
+      const getConnectorId = await this.#getOrInsertConnectorId(
+        clientId,
+        validated.connectorId,
+      );
 
-      if (connector.length && validated.connectorId !== 0) {
+      if (validated.connectorId !== 0) {
         this.#batchInsertMeterValues(
+          getConnectorId,
+          validated.transactionId ?? null,
           validated.meterValue,
-          connector[0].id!,
-          validated.transactionId,
         );
       } else if (validated.connectorId === 0) {
-        this.#batchInsertMeterValues(validated.meterValue, 0);
+        this.#batchInsertMeterValues(
+          getConnectorId,
+          null,
+          validated.meterValue,
+        );
       }
     } catch (error) {
       logOCPPError(
@@ -368,23 +369,24 @@ export default class OcppClientService {
             status: 'Invalid',
           },
         };
-      } else if (!ocppTag.expiredDate) {
-        if (ocppTag.expiredDate!.getTime() < Date.now()) {
-          logger.info(
-            `The transaction ${getTransactionId} contains an expired idTag ${validated.idTag}` +
-              `which was inserted into DB to prevent information loss and has been blocked`,
-            {
-              service,
-            },
-          );
-          idTagInfo = {
-            idTagInfo: {
-              status: 'Expired',
-              expiryDate: ocppTag.expiredDate ?? undefined,
-              parentIdTag: ocppTag.parentIdTag ?? undefined,
-            },
-          };
-        }
+      } else if (
+        ocppTag.expiredDate !== null &&
+        ocppTag.expiredDate.getTime() < Date.now()
+      ) {
+        logger.info(
+          `The transaction ${getTransactionId} contains an expired idTag ${validated.idTag}` +
+            `which was inserted into DB to prevent information loss and has been blocked`,
+          {
+            service,
+          },
+        );
+        idTagInfo = {
+          idTagInfo: {
+            status: 'Expired',
+            expiryDate: ocppTag.expiredDate ?? undefined,
+            parentIdTag: ocppTag.parentIdTag ?? undefined,
+          },
+        };
       }
 
       logger.info(
@@ -493,9 +495,9 @@ export default class OcppClientService {
         .where(eq(transactionStarts.transactionId, validated.transactionId));
 
       await this.#batchInsertMeterValues(
-        validated.transactionData as MeterValue[],
         transaction.connectorId,
         validated.transactionId,
+        validated.transactionData as MeterValue[],
       );
 
       // Accept if idTag is not provided, in case of emergency stop e.g. charging station reset
@@ -536,22 +538,23 @@ export default class OcppClientService {
             status: 'Invalid',
           },
         };
-      } else if (!ocppTag.expiredDate) {
-        if (ocppTag.expiredDate!.getTime() < Date.now()) {
-          logger.info(
-            `IdTag ${validated.idTag} is expired can't stop transaction`,
-            {
-              service,
-            },
-          );
-          idTagInfo = {
-            idTagInfo: {
-              status: 'Expired',
-              expiryDate: ocppTag.expiredDate ?? undefined,
-              parentIdTag: ocppTag.parentIdTag ?? undefined,
-            },
-          };
-        }
+      } else if (
+        ocppTag.expiredDate !== null &&
+        ocppTag.expiredDate.getTime() < Date.now()
+      ) {
+        logger.info(
+          `IdTag ${validated.idTag} is expired can't stop transaction`,
+          {
+            service,
+          },
+        );
+        idTagInfo = {
+          idTagInfo: {
+            status: 'Expired',
+            expiryDate: ocppTag.expiredDate ?? undefined,
+            parentIdTag: ocppTag.parentIdTag ?? undefined,
+          },
+        };
       }
       return idTagInfo;
     } catch (error) {
@@ -580,34 +583,44 @@ export default class OcppClientService {
     clientId: string,
     connectorId: number,
   ): Promise<number> {
-    // Get Connector data from database
-    const connector = await db
-      .select({ id: connectors.id })
-      .from(connectors)
-      .innerJoin(chargeboxes, eq(connectors.chargeboxId, chargeboxes.id))
-      .where(
-        and(
-          eq(chargeboxes.identifier, clientId),
-          eq(connectors.connectorId, connectorId),
-        ),
+    try {
+      // Get Connector data from database
+      const connector = await db
+        .select({ id: connectors.id })
+        .from(connectors)
+        .innerJoin(chargeboxes, eq(connectors.chargeboxId, chargeboxes.id))
+        .where(
+          and(
+            eq(chargeboxes.identifier, clientId),
+            eq(connectors.connectorId, connectorId),
+          ),
+        );
+
+      // If connector does not exist, insert new connector
+      if (!connector.length) {
+        const [chargebox] = await db
+          .select({ id: chargeboxes.id })
+          .from(chargeboxes)
+          .where(eq(chargeboxes.identifier, clientId));
+
+        const newConnector = await db.insert(connectors).values({
+          chargeboxId: chargebox.id,
+          connectorId,
+        });
+
+        return newConnector[0].insertId;
+      }
+
+      return connector[0].id;
+    } catch (error) {
+      logger.error(
+        `Get or insert connector fail: ${(error as Error).message}`,
+        {
+          service,
+        },
       );
-
-    // If connector does not exist, insert new connector
-    if (!connector.length) {
-      const [chargebox] = await db
-        .select({ id: chargeboxes.id })
-        .from(chargeboxes)
-        .where(eq(chargeboxes.identifier, clientId));
-
-      const newConnector = await db.insert(connectors).values({
-        chargeboxId: chargebox.id,
-        connectorId,
-      });
-
-      return newConnector[0].insertId;
+      return 0;
     }
-
-    return connector[0].id;
   }
 
   /**
@@ -624,51 +637,72 @@ export default class OcppClientService {
     timestamp: Date,
     meterStart: number,
   ): Promise<number> {
-    const transaction = await db
-      .select({ id: transactionStarts.transactionId })
-      .from(transactionStarts)
-      .where(
-        and(
-          eq(transactionStarts.connectorPk, connectorId),
-          eq(transactionStarts.idTag, idTag),
-          eq(transactionStarts.startTimestamp, timestamp),
-          eq(transactionStarts.meterStart, meterStart),
-        ),
-      );
+    try {
+      const transaction = await db
+        .select({ id: transactionStarts.transactionId })
+        .from(transactionStarts)
+        .where(
+          and(
+            eq(transactionStarts.connectorPk, connectorId),
+            eq(transactionStarts.idTag, idTag),
+            eq(transactionStarts.startTimestamp, timestamp),
+            eq(transactionStarts.meterStart, meterStart),
+          ),
+        );
 
-    if (!transaction.length) {
-      const newTransaction = await db.insert(transactionStarts).values({
-        connectorPk: connectorId,
-        idTag,
-        startTimestamp: timestamp,
-        meterStart,
+      if (!transaction.length) {
+        const newTransaction = await db.insert(transactionStarts).values({
+          connectorPk: connectorId,
+          idTag,
+          startTimestamp: timestamp,
+          meterStart,
+        });
+
+        return newTransaction[0].insertId;
+      }
+      return transaction[0].id;
+    } catch (error) {
+      logger.error(`Insert transaction fail: ${(error as Error).message}`, {
+        service,
       });
-
-      return newTransaction[0].insertId;
+      return 0;
     }
-    return transaction[0].id;
   }
 
+  /**
+   * Insert meter values data in batch
+   * @param meterVals
+   * @param connectorId
+   * @param transactionId
+   */
   async #batchInsertMeterValues(
-    meterVals: MeterValue[],
     connectorId: number,
-    transactionId?: number,
+    transactionId: number | null,
+    meterVals?: MeterValue[],
   ) {
-    const data = meterVals.flatMap((meterVal) =>
-      meterVal.sampledValue.map((sampledVal) => ({
-        connectorPk: connectorId,
-        transactionId,
-        timestamp: meterVal.timestamp,
-        value: sampledVal.value,
-        readingContext: sampledVal.context,
-        format: sampledVal.format,
-        measurand: sampledVal.measurand,
-        location: sampledVal.location,
-        unit: sampledVal.unit,
-        phase: sampledVal.phase,
-      })),
-    );
+    try {
+      if (!meterVals) return;
 
-    await db.insert(meterValues).values(data);
+      const data = meterVals?.flatMap((meterVal) =>
+        meterVal.sampledValue.map((sampledVal) => ({
+          connectorPk: connectorId,
+          transactionId,
+          timestamp: meterVal.timestamp,
+          value: sampledVal.value,
+          readingContext: sampledVal.context,
+          format: sampledVal.format,
+          measurand: sampledVal.measurand,
+          location: sampledVal.location,
+          unit: sampledVal.unit,
+          phase: sampledVal.phase,
+        })),
+      );
+
+      await db.insert(meterValues).values(data);
+    } catch (error) {
+      logger.error(`Insert meter values fail: ${(error as Error).message}`, {
+        service,
+      });
+    }
   }
 }
