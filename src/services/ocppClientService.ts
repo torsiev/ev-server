@@ -223,11 +223,10 @@ export default class OcppClientService {
     };
   }
 
-  // TODO: Implement diagnosticsStatusNotif
-  diagnosticsStatusNotif(
+  async diagnosticsStatusNotif(
     clientId: string,
     payload: Record<string, unknown>,
-  ): DiagnosticsStatusNotifResponse {
+  ): Promise<DiagnosticsStatusNotifResponse> {
     const validated = validateOCPP(
       diagnosticStatusNotifSchema,
       payload,
@@ -235,18 +234,35 @@ export default class OcppClientService {
     );
 
     logger.info(
-      `Diagnostics status notification received with status: ${validated.status}`,
+      `Diagnostics status notification received from client with status: ${validated.status}`,
       { service },
     );
+
+    try {
+      await db
+        .update(chargeboxes)
+        .set({
+          diagnosticsStatus: validated.status,
+          diagnosticsTimestamp: new Date(),
+        })
+        .where(eq(chargeboxes.identifier, clientId));
+    } catch (error) {
+      logOCPPError(
+        service,
+        clientId,
+        OCPPErrorType.INTERNAL_ERROR,
+        (error as Error).message,
+        OCPPActions.DIAGNOSTICS_STATUS_NOTIF,
+      );
+    }
 
     return {};
   }
 
-  // TODO: Implement firmwareStatusNotif
-  firmwareStatusNotif(
+  async firmwareStatusNotif(
     clientId: string,
     payload: Record<string, unknown>,
-  ): FirmwareStatusNotifResponse {
+  ): Promise<FirmwareStatusNotifResponse> {
     const validated = validateOCPP(
       firmwareStatusNotifSchema,
       payload,
@@ -254,19 +270,57 @@ export default class OcppClientService {
     );
 
     logger.info(
-      `Firmware status notification received with status: ${validated.status}`,
+      `Firmware status notification received from client  with status: ${validated.status}`,
       { service },
     );
+
+    try {
+      await db
+        .update(chargeboxes)
+        .set({
+          firmwareUpdateStatus: validated.status,
+          firmwareUpdateTimestamp: new Date(),
+        })
+        .where(eq(chargeboxes.identifier, clientId));
+    } catch (error) {
+      logOCPPError(
+        service,
+        clientId,
+        OCPPErrorType.INTERNAL_ERROR,
+        (error as Error).message,
+        OCPPActions.FIRMWARE_STATUS_NOTIF,
+      );
+    }
 
     return {};
   }
 
-  // TODO: Implement heartbeat
-  heartbeat(
+  async heartbeat(
     clientId: string,
     payload: Record<string, unknown>,
-  ): HeartbeatResponse {
+  ): Promise<HeartbeatResponse> {
     validateOCPP(heartbeatSchema, payload, OCPPActions.HEARTBEAT);
+
+    logger.info(`Heartbeat status notification received from ${clientId}`, {
+      service,
+    });
+
+    try {
+      await db
+        .update(chargeboxes)
+        .set({
+          lastHeartbeat: new Date(),
+        })
+        .where(eq(chargeboxes.identifier, clientId));
+    } catch (error) {
+      logOCPPError(
+        service,
+        clientId,
+        OCPPErrorType.INTERNAL_ERROR,
+        (error as Error).message,
+        OCPPActions.HEARTBEAT,
+      );
+    }
 
     return {
       currentTime: new Date(),
