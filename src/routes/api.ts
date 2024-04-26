@@ -1,4 +1,4 @@
-import { ocppController } from 'controllers/controller';
+import { ocppController } from 'controllers/index';
 import express from 'express';
 
 export const apiRouter = express.Router();

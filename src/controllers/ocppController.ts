@@ -62,8 +62,6 @@ export default class OcppController extends WebSocketController<WebSocket> {
     let message: OCPPRequest | OCPPResponse;
     try {
       message = JSON.parse(data.toString());
-      let responseData: Record<string, unknown> | undefined = undefined;
-
       // Check if message is outgoing response from charging station
       // This will be handled by the ocppServerService
       if (
@@ -112,24 +110,30 @@ export default class OcppController extends WebSocketController<WebSocket> {
           ws.send(this.#buildResponse(message[1], response));
           break;
         }
-        case OCPPActions.DIAGNOSTICS_STATUS_NOTIF:
-          responseData = this.#ocppClientService.diagnosticsStatusNotif(
+        case OCPPActions.DIAGNOSTICS_STATUS_NOTIF: {
+          const response = await this.#ocppClientService.diagnosticsStatusNotif(
             clientId,
             message[3],
           );
+          ws.send(this.#buildResponse(message[1], response));
           break;
-        case OCPPActions.FIRMWARE_STATUS_NOTIF:
-          responseData = this.#ocppClientService.firmwareStatusNotif(
+        }
+        case OCPPActions.FIRMWARE_STATUS_NOTIF: {
+          const response = await this.#ocppClientService.firmwareStatusNotif(
             clientId,
             message[3],
           );
+          ws.send(this.#buildResponse(message[1], response));
           break;
-        case OCPPActions.HEARTBEAT:
-          responseData = this.#ocppClientService.heartbeat(
+        }
+        case OCPPActions.HEARTBEAT: {
+          const response = await this.#ocppClientService.heartbeat(
             clientId,
             message[3],
           );
+          ws.send(this.#buildResponse(message[1], response));
           break;
+        }
         case OCPPActions.METER_VALUES: {
           const response = await this.#ocppClientService.meterValues(
             clientId,
@@ -167,15 +171,6 @@ export default class OcppController extends WebSocketController<WebSocket> {
             OCPPErrorType.NOT_IMPLEMENTED,
             `Requested action: ${action} is unknown`,
           );
-      }
-      // Send response to client
-      if (responseData) {
-        const res: OCPPResponse = [
-          OCPPMessageType.CALL_RESULT,
-          message[1],
-          responseData,
-        ];
-        ws.send(JSON.stringify(res));
       }
     } catch (error) {
       // Catch unhandled errors from ocppClientService

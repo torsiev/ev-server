@@ -1,6 +1,6 @@
 import { db } from 'app/db';
 import { logger } from 'app/logger';
-import { ocppController } from 'controllers/controller';
+import { ocppController } from 'controllers/index';
 import { chargeboxes } from 'db/schema';
 import { eq } from 'drizzle-orm';
 import { IncomingMessage } from 'http';
