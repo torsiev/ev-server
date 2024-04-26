@@ -4,8 +4,6 @@ import { wsMiddleware } from 'middlewares/wsMiddleware';
 import internal from 'stream';
 import { abortHandshake } from 'utils/wsUtil';
 
-const service = 'wsRouteHandler';
-
 export default async function wsRouteHandler(
   request: IncomingMessage,
   socket: internal.Duplex,
@@ -15,6 +13,6 @@ export default async function wsRouteHandler(
     wsMiddleware(request, socket, head);
   } catch (error) {
     abortHandshake(socket, 500);
-    logger.error(error as string, { service });
+    logger.error(error as string, { module: 'wsRouteHandler' });
   }
 }

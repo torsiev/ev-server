@@ -38,7 +38,7 @@ import {
 } from 'validations/ocppValidation';
 import { RawData, WebSocket } from 'ws';
 
-const service = 'OCPPServerService';
+const MODULE_NAME = 'OCPPServerService';
 
 export default class OcppServerService {
   // Helper method to handle WebSocket response from charging station
@@ -51,7 +51,8 @@ export default class OcppServerService {
 
         if (message[0] === OCPPMessageType.CALL_ERROR) {
           logger.error(`Charging station response with error, ${message}`, {
-            service,
+            module: MODULE_NAME,
+            method: 'wsClientResponse',
           });
           reject(new Error(`Charging station response with error, ${message}`));
         }

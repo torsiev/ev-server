@@ -39,7 +39,7 @@ import {
   stopTransactionSchema,
 } from 'validations/ocppValidation';
 
-const service = 'OCPPClientService';
+const MODULE_NAME = 'OCPPClientService';
 
 export default class OcppClientService {
   async authorize(
@@ -63,7 +63,8 @@ export default class OcppClientService {
 
       if (!ocppTag) {
         logger.info(`RFID card ${validated.idTag} is not registered`, {
-          service,
+          module: MODULE_NAME,
+          method: 'authorize',
         });
 
         return {
@@ -76,7 +77,8 @@ export default class OcppClientService {
         ocppTag.expiredDate.getTime() < Date.now()
       ) {
         logger.info(`RFID card ${ocppTag.idTag} is expired`, {
-          service,
+          module: MODULE_NAME,
+          method: 'authorize',
         });
         return {
           idTagInfo: {
@@ -90,7 +92,8 @@ export default class OcppClientService {
       logger.info(
         `User with RFID card ${ocppTag.idTag} has been authorized to charge`,
         {
-          service,
+          module: MODULE_NAME,
+          method: 'authorize',
         },
       );
 
@@ -103,7 +106,7 @@ export default class OcppClientService {
       };
     } catch (error) {
       logOCPPError(
-        service,
+        MODULE_NAME,
         clientId,
         OCPPErrorType.INTERNAL_ERROR,
         (error as Error).message,
@@ -143,7 +146,7 @@ export default class OcppClientService {
 
     logger.info(
       `Boot notification received from ${chargePointVendor} ${chargePointModel}`,
-      { service },
+      { module: MODULE_NAME, method: 'bootNotification' },
     );
 
     try {
@@ -173,7 +176,7 @@ export default class OcppClientService {
       // If database update failed, log error and send rejected response
       // then close the WebSocket connection
       logOCPPError(
-        service,
+        MODULE_NAME,
         clientId,
         OCPPErrorType.INTERNAL_ERROR,
         (error as Error).message,
@@ -202,19 +205,25 @@ export default class OcppClientService {
       OCPPActions.DATA_TRANSFER,
     );
 
-    logger.info(`Data transfer received from station with ID:${clientId}`, {
-      service,
-    });
+    logger.info(
+      `Data transfer received from station with ID:${clientId} vendor ID: ${validated.vendorId}`,
+      {
+        module: MODULE_NAME,
+        method: 'dataTransfer',
+      },
+    );
 
     if (validated.messageId) {
       logger.info(`Data transfer message ID: ${validated.messageId}`, {
-        service,
+        module: MODULE_NAME,
+        method: 'dataTransfer',
       });
     }
 
-    if (validated.messageId) {
-      logger.info(`Data transfer message ID: ${validated.messageId}`, {
-        service,
+    if (validated.data) {
+      logger.info(`Data transfer data: ${validated.data}`, {
+        module: MODULE_NAME,
+        method: 'dataTransfer',
       });
     }
 
@@ -235,7 +244,7 @@ export default class OcppClientService {
 
     logger.info(
       `Diagnostics status notification received from client with status: ${validated.status}`,
-      { service },
+      { module: MODULE_NAME, method: 'diagnosticsStatusNotif' },
     );
 
     try {
@@ -248,7 +257,7 @@ export default class OcppClientService {
         .where(eq(chargeboxes.identifier, clientId));
     } catch (error) {
       logOCPPError(
-        service,
+        MODULE_NAME,
         clientId,
         OCPPErrorType.INTERNAL_ERROR,
         (error as Error).message,
@@ -271,7 +280,7 @@ export default class OcppClientService {
 
     logger.info(
       `Firmware status notification received from client  with status: ${validated.status}`,
-      { service },
+      { module: MODULE_NAME, method: 'firmwareStatusNotif' },
     );
 
     try {
@@ -284,7 +293,7 @@ export default class OcppClientService {
         .where(eq(chargeboxes.identifier, clientId));
     } catch (error) {
       logOCPPError(
-        service,
+        MODULE_NAME,
         clientId,
         OCPPErrorType.INTERNAL_ERROR,
         (error as Error).message,
@@ -302,7 +311,8 @@ export default class OcppClientService {
     validateOCPP(heartbeatSchema, payload, OCPPActions.HEARTBEAT);
 
     logger.info(`Heartbeat status notification received from ${clientId}`, {
-      service,
+      module: MODULE_NAME,
+      method: 'heartbeat',
     });
 
     try {
@@ -314,7 +324,7 @@ export default class OcppClientService {
         .where(eq(chargeboxes.identifier, clientId));
     } catch (error) {
       logOCPPError(
-        service,
+        MODULE_NAME,
         clientId,
         OCPPErrorType.INTERNAL_ERROR,
         (error as Error).message,
@@ -335,6 +345,14 @@ export default class OcppClientService {
       meterValuesSchema,
       payload,
       OCPPActions.METER_VALUES,
+    );
+
+    logger.info(
+      `Meter values received from station ${clientId}, connector ${validated.connectorId}`,
+      {
+        module: MODULE_NAME,
+        method: 'meterValues',
+      },
     );
 
     try {
@@ -358,7 +376,7 @@ export default class OcppClientService {
       }
     } catch (error) {
       logOCPPError(
-        service,
+        MODULE_NAME,
         clientId,
         OCPPErrorType.INTERNAL_ERROR,
         (error as Error).message,
@@ -414,7 +432,8 @@ export default class OcppClientService {
           `The transaction ${getTransactionId} contains an unknown idTag ${validated.idTag}` +
             `which was inserted into DB to prevent information loss and has been blocked`,
           {
-            service,
+            module: MODULE_NAME,
+            method: 'startTransaction',
           },
         );
 
@@ -431,7 +450,8 @@ export default class OcppClientService {
           `The transaction ${getTransactionId} contains an expired idTag ${validated.idTag}` +
             `which was inserted into DB to prevent information loss and has been blocked`,
           {
-            service,
+            module: MODULE_NAME,
+            method: 'startTransaction',
           },
         );
         idTagInfo = {
@@ -446,7 +466,8 @@ export default class OcppClientService {
       logger.info(
         `Transaction ${getTransactionId} started on connector ${validated.connectorId}`,
         {
-          service,
+          module: MODULE_NAME,
+          method: 'startTransaction',
         },
       );
 
@@ -456,7 +477,7 @@ export default class OcppClientService {
       };
     } catch (error) {
       logOCPPError(
-        service,
+        MODULE_NAME,
         clientId,
         OCPPErrorType.INTERNAL_ERROR,
         (error as Error).message,
@@ -506,11 +527,11 @@ export default class OcppClientService {
       });
       logger.info(
         `Status notification received from station ${clientId} on connector ${getConnectorId}`,
-        { service },
+        { module: MODULE_NAME, method: 'statusNotif' },
       );
     } catch (error) {
       logOCPPError(
-        service,
+        MODULE_NAME,
         clientId,
         OCPPErrorType.INTERNAL_ERROR,
         (error as Error).message,
@@ -530,6 +551,11 @@ export default class OcppClientService {
       payload,
       OCPPActions.STOP_TRANSACTION,
     );
+
+    logger.info(`Transaction ${validated.transactionId} stopped`, {
+      module: MODULE_NAME,
+      method: 'stopTransaction',
+    });
 
     try {
       // --------------------------------------------
@@ -583,7 +609,8 @@ export default class OcppClientService {
         logger.info(
           `Unknown idTag ${validated.idTag} try to stop transaction ${validated.transactionId}`,
           {
-            service,
+            module: MODULE_NAME,
+            method: 'stopTransaction',
           },
         );
 
@@ -599,7 +626,8 @@ export default class OcppClientService {
         logger.info(
           `IdTag ${validated.idTag} is expired can't stop transaction`,
           {
-            service,
+            module: MODULE_NAME,
+            method: 'stopTransaction',
           },
         );
         idTagInfo = {
@@ -613,7 +641,7 @@ export default class OcppClientService {
       return idTagInfo;
     } catch (error) {
       logOCPPError(
-        service,
+        MODULE_NAME,
         clientId,
         OCPPErrorType.INTERNAL_ERROR,
         (error as Error).message,
@@ -670,7 +698,8 @@ export default class OcppClientService {
       logger.error(
         `Get or insert connector fail: ${(error as Error).message}`,
         {
-          service,
+          module: MODULE_NAME,
+          method: 'getOrInsertConnectorId',
         },
       );
       return 0;
@@ -717,7 +746,8 @@ export default class OcppClientService {
       return transaction[0].id;
     } catch (error) {
       logger.error(`Insert transaction fail: ${(error as Error).message}`, {
-        service,
+        module: MODULE_NAME,
+        method: 'insertOrIgnoreTransaction',
       });
       return 0;
     }
@@ -755,7 +785,8 @@ export default class OcppClientService {
       await db.insert(meterValues).values(data);
     } catch (error) {
       logger.error(`Insert meter values fail: ${(error as Error).message}`, {
-        service,
+        module: MODULE_NAME,
+        method: 'batchInsertMeterValues',
       });
     }
   }

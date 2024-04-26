@@ -28,7 +28,7 @@ export function urlToClientId(url?: string): string {
 }
 
 export function logOCPPError(
-  service: string,
+  module: string,
   client: string,
   code: OCPPErrorType,
   message: string,
@@ -41,7 +41,7 @@ export function logOCPPError(
       action,
       message,
     }),
-    { service },
+    { module },
   );
 }
 

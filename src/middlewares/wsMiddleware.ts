@@ -32,7 +32,7 @@ export async function wsMiddleware(
     ocppController.handleUpgrade(request, socket, head);
     logger.info(
       `WebSocket connection established with ${cpIdentifier[0].identifier}`,
-      { service: 'wsMiddleware' },
+      { module: 'wsMiddleware' },
     );
   } else {
     abortHandshake(socket, 404);

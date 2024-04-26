@@ -194,7 +194,10 @@ export default class OcppController extends WebSocketController<WebSocket> {
           ws.send(JSON.stringify(err));
         }
       } else if (error instanceof Error) {
-        logger.error(error.message, { service: this.className });
+        logger.error(error.message, {
+          module: this.className,
+          method: 'onMessage',
+        });
         if (ws.readyState !== WebSocket.CLOSED) {
           ws.terminate();
         }
@@ -203,15 +206,15 @@ export default class OcppController extends WebSocketController<WebSocket> {
   }
 
   protected onError(request: IncomingMessage, err: Error): void {
-    logger.error(err.message, { service: this.className });
+    logger.error(err.message, { module: this.className, method: 'onError' });
   }
 
   protected onPing(): void {
-    logger.info('ping', { service: this.className });
+    logger.info('ping', { module: this.className, method: 'onPing' });
   }
 
   protected onPong(): void {
-    logger.info('pong', { service: this.className });
+    logger.info('pong', { module: this.className, method: 'onPong' });
   }
 
   protected onClose(
@@ -223,7 +226,8 @@ export default class OcppController extends WebSocketController<WebSocket> {
     logger.info(
       `Connection with ${urlToClientId(request.url)} disconnected ${code} ${reason}`,
       {
-        service: this.className,
+        module: this.className,
+        method: 'onClose',
       },
     );
   }

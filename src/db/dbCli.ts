@@ -55,7 +55,6 @@ import seed from './seed';
     }
 
     if (args['--create']) {
-      logger.debug('buat db lagi', { service: 'DB CLI' });
       await createDb();
     }
 
@@ -71,7 +70,7 @@ import seed from './seed';
       await dropDb();
     }
   } catch (err) {
-    logger.error((err as Error).message, { service: 'DB CLI' });
+    logger.error((err as Error).message, { module: 'dbCli', method: 'main' });
     process.exit(1);
   }
 })();
@@ -100,23 +99,23 @@ async function getConn() {
 async function createDb() {
   const dbName = process.env['DB_NAME'];
   logger.info(`Creating ${dbName} database`, {
-    service: 'DB CLI',
+    module: 'dbCli',
   });
   await using db = await getConn();
   await db.connection.query(`CREATE DATABASE IF NOT EXISTS ${dbName}`);
   logger.info(`Database ${dbName} created`, {
-    service: 'DB CLI',
+    module: 'dbCli',
   });
 }
 
 async function migrateDb() {
-  logger.info('Starting database migration', { service: 'DB CLI' });
+  logger.info('Starting database migration', { module: 'dbCli' });
   await using db = await getConn();
   await db.connection.query(`USE ${process.env['DB_NAME']}`);
   await migrate(drizzle(db.connection), {
     migrationsFolder: './drizzle',
   });
-  logger.info('Migration complete', { service: 'DB CLI' });
+  logger.info('Migration complete', { module: 'dbCli' });
 }
 
 async function dropDb() {
@@ -125,22 +124,22 @@ async function dropDb() {
   }
   const dbName = process.env['DB_NAME'];
   logger.info(`Dropping ${dbName} database`, {
-    service: 'DB CLI',
+    module: 'dbCli',
   });
   await using db = await getConn();
   await db.connection.query(`DROP DATABASE IF EXISTS ${dbName}`);
   logger.info(`Database ${dbName} dropped`, {
-    service: 'DB CLI',
+    module: 'dbCli',
   });
 }
 
 async function seedDb() {
-  logger.info('Seeding database', { service: 'DB CLI' });
+  logger.info('Seeding database', { module: 'dbCli' });
   await using mysql = await getConn();
   await mysql.connection.query(`USE ${process.env['DB_NAME']}`);
   const db = drizzle(mysql.connection);
 
   await seed(db);
 
-  logger.info('Seeding complete', { service: 'DB CLI' });
+  logger.info('Seeding complete', { module: 'dbCli' });
 }

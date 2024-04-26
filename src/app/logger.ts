@@ -7,11 +7,14 @@ export const logger = createLogger({
   format: format.combine(
     format.colorize(),
     format.timestamp(),
-    format.printf(({ timestamp, level, message, service }) => {
-      return `[${timestamp}] ${service} ${level}: ${message}`;
+    format.printf(({ timestamp, level, message, module, method }) => {
+      return method !== ''
+        ? `[${timestamp}] ${level}(${module} - ${method}): ${message}`
+        : `[${timestamp}] ${level}(${module}): ${message}`;
     }),
   ),
   defaultMeta: {
-    service: 'App',
+    module: 'App',
+    method: '',
   },
 });
