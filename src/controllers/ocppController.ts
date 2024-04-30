@@ -358,6 +358,21 @@ export default class OcppController extends WebSocketController<WebSocket> {
     };
   }
 
+  get triggerMessage() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const ws = this.getClientWs(req.params.id);
+        const response = await this.#ocppServerService.triggerMessage(
+          ws,
+          req.body,
+        );
+        res.json(response);
+      } catch (error) {
+        next(error);
+      }
+    };
+  }
+
   get unlockConnector() {
     return async (req: Request, res: Response, next: NextFunction) => {
       try {

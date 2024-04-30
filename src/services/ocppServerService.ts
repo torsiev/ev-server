@@ -14,6 +14,7 @@ import {
   GetConfigResponse,
   RemoteStartTransactionResponse,
   ResetResponse,
+  TriggerMessageResponse,
   UnlockConnectorResponse,
 } from 'types/ocpp/ocppServer';
 import { OCPPError, validateOCPP } from 'utils/ocppUtil';
@@ -33,6 +34,8 @@ import {
   remoteStopTransactionResSchema,
   resetReqSchema,
   resetResSchema,
+  triggerMessageReqSchema,
+  triggerMessageResSchema,
   unlockConnectorReqSchema,
   unlockConnectorResSchema,
 } from 'validations/ocppValidation';
@@ -348,6 +351,43 @@ export default class OcppServerService {
 
     try {
       return validateOCPP(resetResSchema, cpResponse[2], OCPPActions.RESET);
+    } catch (error) {
+      if (error instanceof OCPPError) {
+        throw new RestError(
+          422,
+          'Cannot process response from charging station, uncompatible charging station',
+        );
+      }
+
+      throw new RestError(500, 'Internal server error');
+    }
+  }
+
+  async triggerMessage(
+    client: WebSocket,
+    payload: Record<string, unknown>,
+  ): Promise<TriggerMessageResponse> {
+    const validatedPayload = triggerMessageReqSchema.safeParse(payload);
+
+    if (!validatedPayload.success) {
+      throw new RestError(
+        400,
+        'Invalid payload',
+        validatedPayload.error.issues,
+      );
+    }
+
+    client.send(
+      this.#buildRequest(OCPPActions.TRIGGER_MESSAGE, validatedPayload.data),
+    );
+
+    const cpResponse = await this.#wsClientResponse(client);
+    try {
+      return validateOCPP(
+        triggerMessageResSchema,
+        cpResponse[2],
+        OCPPActions.TRIGGER_MESSAGE,
+      );
     } catch (error) {
       if (error instanceof OCPPError) {
         throw new RestError(

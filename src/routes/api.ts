@@ -36,6 +36,11 @@ apiRouter.post(
 apiRouter.post(BASE_URL + '/:id/reset', ocppController.reset);
 
 apiRouter.post(
+  BASE_URL + '/:id/trigger-message',
+  ocppController.triggerMessage,
+);
+
+apiRouter.post(
   BASE_URL + '/:id/unlock-connector',
   ocppController.unlockConnector,
 );
