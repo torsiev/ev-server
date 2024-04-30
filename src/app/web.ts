@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import { apiRouter } from 'routes/api';
 import {
   notFoundMiddleware,
@@ -7,6 +8,7 @@ import {
 
 export const web = express();
 
+web.use(cors());
 web.use(express.json());
 web.use('/api/v1', apiRouter);
 
