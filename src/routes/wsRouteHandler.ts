@@ -1,6 +1,6 @@
 import { logger } from 'app/logger';
 import { IncomingMessage } from 'http';
-import { wsMiddleware } from 'middlewares/wsMiddleware';
+import { wsMiddleware } from 'middlewares/ocppWsMiddleware';
 import internal from 'stream';
 import { abortHandshake } from 'utils/wsUtil';
 

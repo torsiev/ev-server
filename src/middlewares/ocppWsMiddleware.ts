@@ -22,6 +22,13 @@ export async function wsMiddleware(
     return;
   }
 
+  // Check if the charge point is already connected to the server
+  const isConnected = ocppController.clients.has(urlToClientId(url));
+  if (isConnected) {
+    abortHandshake(socket, 409);
+    return;
+  }
+
   // Check if the charge point identifier exists in the database
   const cpIdentifier = await db
     .select({ identifier: chargeboxes.identifier })
