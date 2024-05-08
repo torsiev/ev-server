@@ -88,3 +88,7 @@ For more options you can run add `--help` argument.
   # or
   pnpm run db -h
 ```
+
+## Project Docs
+
+See [`/docs/ev-server101.md`](./docs/ev-server101.md) for more information about this project.
