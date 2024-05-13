@@ -2,6 +2,9 @@ import { logger } from 'app/logger';
 import { OCPPActions, OCPPErrorType } from 'types/ocpp/ocppCommon';
 import z from 'zod';
 
+/**
+ * Custom Error class for OCPP errors
+ */
 export class OCPPError extends Error {
   code: OCPPErrorType;
   action: OCPPActions | undefined;
@@ -20,6 +23,14 @@ export class OCPPError extends Error {
   }
 }
 
+/**
+ * Utility function to get OCPP Client ID from URL
+ * @param url - URL to extract client ID
+ * @returns client ID extracted from URL
+ *
+ * @example
+ * urlToClientId('http://localhost:3000/OCPP16/123') // '123'
+ */
 export function urlToClientId(url?: string): string {
   if (!url) return '';
 
@@ -27,6 +38,14 @@ export function urlToClientId(url?: string): string {
   return paths[paths.length - 1];
 }
 
+/**
+ * Helper function to format OCPP log errors
+ * @param module Project module name
+ * @param client OCPP client ID
+ * @param code Error type
+ * @param message Error message
+ * @param action OCPP action that caused the error
+ */
 export function logOCPPError(
   module: string,
   client: string,
