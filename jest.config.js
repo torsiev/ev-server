@@ -11,5 +11,6 @@ module.exports = {
     '^types/(.*)': '<rootDir>/src/types/$1',
     '^utils/(.*)': '<rootDir>/src/utils/$1',
     '^validations/(.*)': '<rootDir>/src/validations/$1',
+    '^db/(.*)': '<rootDir>/src/db/$1',
   },
 };
