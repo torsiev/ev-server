@@ -37,7 +37,7 @@ export default async function seed(db: MySql2Database) {
   // Insert data to chargeboxes
   const chargeBoxesTable = await db.insert(chargeboxes).values({
     addressId: chargeBoxesAddress[0].insertId,
-    identifier: '123',
+    identifier: 'ID0122120103',
     ocppProtocol: WssProtocol.OCPP16,
     locationLatitude: '38.8958',
     locationLongitude: '-132.4095',
