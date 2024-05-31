@@ -10,7 +10,7 @@ import { urlToClientId } from 'utils/ocppUtil';
 import { abortHandshake } from 'utils/wsUtil';
 
 const ocppRoute = new RegExp(`^${WssRoute.OCPP16}/(?:([^/]+?))$`);
-export async function wsMiddleware(
+export async function ocppWsMiddleware(
   request: IncomingMessage,
   socket: internal.Duplex,
   head: Buffer,
