@@ -6,11 +6,11 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ${DB_VOLUME_PATH}:/var/lib/mysql
 
   app:
     depends_on: ['db']
     image: ev-server
     ports:
       - 3000:3000
-    volumes:
-      - ${DB_VOLUME_PATH}:/var/lib/mysql
