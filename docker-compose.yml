@@ -2,7 +2,7 @@ services:
   db:
     image: mysql:8
     ports:
-      - 3306:3306
+      - ${DB_PORT}:3306
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
@@ -12,3 +12,5 @@ services:
     image: ev-server
     ports:
       - 3000:3000
+    volumes:
+      - ${DB_VOLUME_PATH}:/var/lib/mysql
