@@ -72,6 +72,56 @@ To run tests, run the following command.
   pnpm test
 ```
 
+## Running with Docker
+
+> Each following command has to be executed in the project root folder
+
+Before we start please create a `.env` file first, you can follow the [Setup](#setup) chapter to see how you can do it.
+
+First, set the ENV value for the database, you can follow this example:
+
+```bash
+DB_HOST=db # You must set the host to db, otherwise the app won't connect to the db
+DB_USER=root
+# For the others you can setup on you own
+DB_PORT=3306
+DB_PASSWORD=yourpassword
+DB_NAME="ev_server"
+# This path can be anywhere, depending on your preferences
+DB_VOLUME_PATH="C:/Users/someone/Documents/docker_mysql" # Windows
+DB_VOLUME_PATH="/home/user/docker_mysql" # Linux
+```
+
+After setting up the `.env` file, make sure your device is running docker. Then build the docker image for this project.
+
+```bash
+docker image build -t ev-server .
+```
+
+Then, run the docker-compose with this command:
+
+```bash
+docker compose up -d
+```
+
+If the containers run properly, you can run database migration on the app container.
+
+```bash
+docker exec -it <container_id_or_name> bash
+#example
+vdocker exec -it ev-server-app-1 bash
+```
+
+Inside the container bash, you can run the database migration.
+
+```bash
+pnpm run db:node
+
+pnpm run db:node --seed # Run db seeding (optional)
+```
+
+Now the project runs on docker🥳.
+
 ## Running Database Migration
 
 To run database migration, make sure the env value for the database is correct. Then you can run the following command.
