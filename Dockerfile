@@ -32,4 +32,4 @@ EXPOSE 3000
 
 # Start the application
 
-CMD sleep 60 && pnpm run db:node && pnpm start
+CMD pnpm start
