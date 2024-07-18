@@ -109,7 +109,7 @@ If the containers run properly, you can run database migration on the app contai
 ```bash
 docker exec -it <container_id_or_name> bash
 #example
-vdocker exec -it ev-server-app-1 bash
+docker exec -it ev-server-app-1 bash
 ```
 
 Inside the container bash, you can run the database migration.
